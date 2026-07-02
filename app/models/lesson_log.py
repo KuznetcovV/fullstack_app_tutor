@@ -5,7 +5,7 @@ from app.core.database import Base
 from app.models.mixins import TimestampMixin
 
 class LessonLog(TimestampMixin, Base):
-    __tablename__ = "lesson_log"
+    __tablename__ = "lesson_logs"
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
