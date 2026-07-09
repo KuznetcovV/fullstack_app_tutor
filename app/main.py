@@ -11,8 +11,6 @@ app = FastAPI()
 def home():
     return {"message": "Максим, ты уволен"}
 
-Base.metadata.create_all(bind=engine)
-
 
 app.include_router(students_router)
 app.include_router(lessons_router)
