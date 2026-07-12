@@ -11,3 +11,7 @@ class StudentResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class StudentUpdate(BaseModel):
+    name: str | None = None
+    number_of_class: int | None = None
