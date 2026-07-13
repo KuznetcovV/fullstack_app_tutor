@@ -1,17 +1,35 @@
 from pydantic import BaseModel
 
 class StudentCreate(BaseModel):
-    name: str
+    first_name: str
+    last_name: str
     number_of_class: int
+    phone: str | None = None
+    parent_name: str | None = None
+    parent_phone: str | None = None
+    notes: str | None = None
+    is_active: bool
 
 class StudentResponse(BaseModel):
     id: int
-    name: str
+    first_name: str
+    last_name: str
     number_of_class: int
+    phone: str | None = None
+    parent_name: str | None = None
+    parent_phone: str | None = None
+    notes: str | None = None
+    is_active: bool
 
     class Config:
         from_attributes = True
 
 class StudentUpdate(BaseModel):
-    name: str | None = None
+    first_name: str | None = None
+    last_name: str | None = None
     number_of_class: int | None = None
+    phone: str | None = None
+    parent_name: str | None = None
+    parent_phone: str | None = None
+    notes: str | None = None
+    is_active: bool | None = None
