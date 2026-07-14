@@ -37,8 +37,7 @@ def search_students_service(db: Session, query: str) -> list[Student]:
     
 
 def get_student_by_id_service(db: Session, student_id: int) -> Student | None:
-    return db.query(Student).filter(Student.id == student_id).first()
-
+    return db.get(Student, student_id)
 
 #Создание
 
@@ -77,8 +76,8 @@ def update_student_service(db: Session,
 
 #Удаление
 
-def delete_student_by_id_service(db: Session, student_id: int):
-    student = db.query(Student).filter(Student.id == student_id).first()
+def delete_student_service(db: Session, student_id: int):
+    student = db.get(Student, student_id)
 
     if student:
         db.delete(student)

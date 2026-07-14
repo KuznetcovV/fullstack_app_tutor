@@ -8,7 +8,7 @@ class StudentCreate(BaseModel):
     parent_name: str | None = None
     parent_phone: str | None = None
     notes: str | None = None
-    is_active: bool
+    is_active: bool = True
 
 class StudentResponse(BaseModel):
     id: int

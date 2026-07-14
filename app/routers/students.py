@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, Response
+from fastapi import APIRouter, HTTPException, Depends, Response, status
 from sqlalchemy.orm import Session
 from app.dependencies.database import get_db
 from app.schemas.student import StudentCreate, StudentResponse, StudentUpdate
@@ -16,6 +16,7 @@ router = APIRouter(prefix="/students", tags=["Ученики"])
 
 @router.get("/", 
             response_model=list[StudentResponse],
+            status_code=status.HTTP_200_OK,
             summary="Получить список учеников")
 def get_students(
     number_of_class: int | None = None,
@@ -27,6 +28,7 @@ def get_students(
 
 @router.get("/search",
             response_model=list[StudentResponse],
+            status_code=status.HTTP_200_OK,
             summary="Поиск по имени/фамилии/полному имени")
 def search_students(
     query: str,
@@ -37,6 +39,7 @@ def search_students(
 
 @router.get("/{student_id}",
             response_model=StudentResponse,
+            status_code=status.HTTP_200_OK,
             summary="Получить конкретного ученика")
 def get_student_by_id(student_id: int, db: Session = Depends(get_db)) -> StudentResponse:
     student = get_student_by_id_service(db, student_id)
@@ -49,6 +52,7 @@ def get_student_by_id(student_id: int, db: Session = Depends(get_db)) -> Student
 
 @router.post("/", 
             summary="Добавление ученика",
+            status_code=status.HTTP_201_CREATED,
             response_model=StudentResponse)
 def create_student(data: StudentCreate,
                    db: Session = Depends(get_db)):
@@ -57,6 +61,7 @@ def create_student(data: StudentCreate,
 
 @router.patch("/{student_id}",
               summary="Обновление данных ученика",
+              status_code=status.HTTP_200_OK,
               response_model=StudentResponse)
 def update_student(student_id: int,
                    data: StudentUpdate,
@@ -75,7 +80,7 @@ def update_student(student_id: int,
 
 
 @router.delete("/{student_id}",
-               status_code=204,
+               status_code=status.HTTP_204_NO_CONTENT,
                summary="Удаление ученика")
 def remove_student(student_id: int, db: Session = Depends(get_db)):
     student = delete_student_by_id_service(db, student_id)
