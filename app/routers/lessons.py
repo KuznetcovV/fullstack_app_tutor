@@ -55,7 +55,7 @@ def update_lesson(
                                    data=data)
     
     if lesson is None:
-        raise HTTPException(status_code=404,
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail="Урок не найден")
     
     return lesson
@@ -70,6 +70,6 @@ def remove_lesson(
     lesson = delete_lesson_service(db=db, lesson_id=lesson_id)
 
     if lesson is None:
-        raise HTTPException(status_code=404, detail="Урок не найден")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Урок не найден")
     
     return Response(status_code=status.HTTP_204_NO_CONTENT)
