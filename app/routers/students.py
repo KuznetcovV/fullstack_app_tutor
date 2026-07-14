@@ -8,7 +8,7 @@ from app.services.student import (
     get_student_by_id_service,
     update_student_service,
     create_student_service,
-    delete_student_by_id_service
+    delete_student_service
 )
 
 
@@ -83,7 +83,7 @@ def update_student(student_id: int,
                status_code=status.HTTP_204_NO_CONTENT,
                summary="Удаление ученика")
 def remove_student(student_id: int, db: Session = Depends(get_db)):
-    student = delete_student_by_id_service(db, student_id)
+    student = delete_student_service(db, student_id)
 
     if student is None:
         raise HTTPException(

@@ -14,9 +14,5 @@ def home():
 
 app.include_router(students_router)
 app.include_router(lessons_router)
-app.include_router(subscriptions_router,
-                   prefix="/subscriptions",
-                   tags=["Subscriptions"])
-app.include_router(lesson_logs_router,
-                   prefix="/lesson_logs",
-                   tags=["Lesson_logs"])
+app.include_router(subscriptions_router)
+app.include_router(lesson_logs_router)
