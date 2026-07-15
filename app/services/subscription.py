@@ -3,16 +3,40 @@ from app.schemas.subscription import SubscriptionCreate, SubscriptionResponse, S
 from app.models.subscription import Subscription
 from app.models.student import Student
 from fastapi import HTTPException, status
+from sqlalchemy import or_
+from datetime import date
+
+
 
 #Получение
 def get_subscriptions_service(
+        is_active: bool | None,
+        is_paid: bool | None,
         db: Session
         ) -> list[Subscription]:
-    return db.query(Subscription).all()
+    today = date.today()
+    subscriptions = db.query(Subscription)
+    if is_active == True:
+        subscriptions = subscriptions.filter(
+            Subscription.start_date <= today,
+            Subscription.end_date >= today
+        )
+    elif is_active == False:
+        subscriptions = subscriptions.filter(
+            or_(
+                Subscription.start_date > today,
+                Subscription.end_date < today
+            ))
+
+    if is_paid == True:
+        subscriptions = subscriptions.filter(
+            Subscription.is_paid == is_paid
+        )
+        
+    return subscriptions.all()
 
 def get_subscription_by_id_service(db: Session, subscription_id: int) -> Subscription | None:
     return db.get(Subscription, subscription_id)
-
 
 #Создание
 def create_subscription_service(db: Session, subscription: SubscriptionCreate) -> Subscription:

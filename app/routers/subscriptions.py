@@ -10,9 +10,14 @@ router = APIRouter(prefix="/subscriptions", tags=["Абонементы"])
 @router.get("/",
             response_model=list[SubscriptionResponse],
             status_code=status.HTTP_200_OK,
-            summary="Получить все абонементы")
-def get_subscriptions(db: Session = Depends(get_db)) -> list[SubscriptionResponse]:
-    return get_subscriptions_service(db=db)
+            summary="Получить абонементы")
+def get_subscriptions(is_active: bool | None = None,
+                      is_paid: bool | None = None,
+                      db: Session = Depends(get_db)) -> list[SubscriptionResponse]:
+    return get_subscriptions_service(
+        is_active=is_active,
+        is_paid=is_paid,
+        db=db)
 
 @router.get("/{subscription_id}",
             response_model=SubscriptionResponse,
@@ -32,7 +37,6 @@ def get_subscription_by_id(
             detail="Абонемент не найден")
     
     return subscription
-
 
 @router.post("/",
             response_model=SubscriptionResponse,

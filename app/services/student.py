@@ -1,8 +1,12 @@
 from sqlalchemy.orm import Session
 from app.models.student import Student
+from app.models.lesson import Lesson
+from app.models.lesson_log import LessonLog
+from app.models.subscription import Subscription
 from app.schemas.student import StudentCreate, StudentUpdate
 from sqlalchemy import func, or_
-
+from fastapi import HTTPException, status
+from datetime import date
 
 #Получение
 
@@ -39,6 +43,41 @@ def search_students_service(db: Session, query: str) -> list[Student]:
 def get_student_by_id_service(db: Session, student_id: int) -> Student | None:
     return db.get(Student, student_id)
 
+def get_lessons_for_student_service(db: Session, student_id: int) -> list[Lesson]:
+    student = db.get(Student, student_id)
+    if student is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ученик не найден")
+    
+    return db.query(Lesson).filter(Lesson.student_id == student_id).all()
+
+def get_lesson_logs_for_student_service(db: Session, student_id: int) -> list[LessonLog]:
+    student = db.get(Student, student_id)
+    if student is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ученик не найден")
+    
+    return db.query(LessonLog).filter(LessonLog.student_id == student_id).all()
+
+def get_active_subscription_for_student_service(db: Session, student_id: int) -> Subscription:
+    today = date.today()
+    student = db.get(Student, student_id)
+    if student is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ученик не найден")
+    
+    subscription = db.query(Subscription).filter(
+        Subscription.student_id == student_id,
+        Subscription.start_date <= today,
+        Subscription.end_date >= today).first()
+    
+    if subscription is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Активных абонементов нет")
+    return subscription
+
+def get_subscriptions_for_student_service(db: Session, student_id: int) -> list[Subscription]:
+    student = db.get(Student, student_id)
+    if student is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ученик не найден")
+    
+    return db.query(Subscription).filter(Subscription.student_id == student_id).all()
 #Создание
 
 def create_student_service(db: Session, data: StudentCreate):

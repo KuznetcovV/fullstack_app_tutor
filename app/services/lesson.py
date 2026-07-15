@@ -3,13 +3,27 @@ from app.models.lesson import Lesson
 from app.models.student import Student
 from app.schemas.lesson import LessonCreate, LessonUpdate
 from fastapi import HTTPException
-
+from datetime import date
 #Получение
-def get_lessons_service(db: Session) -> list[Lesson]:
-    return db.query(Lesson).all()
+def get_lessons_service(
+        day: int | None,
+        db: Session
+        ) -> list[Lesson]:
+    
+    lessons = db.query(Lesson)
+    if day is not None:
+        lessons = lessons.filter(Lesson.day == day)
+    
+    return lessons.all()
 
 def get_lesson_by_id_service(db: Session, lesson_id: int) -> Lesson | None:
     return db.get(Lesson, lesson_id)
+
+
+def get_today_lesson_service(db: Session) -> list[Lesson]:
+    today = date.today().weekday()
+    lessons = db.query(Lesson).filter(Lesson.day == today).all()
+    return lessons
 
 #Создание
 def create_lesson_service(db: Session, lesson: LessonCreate) -> Lesson:

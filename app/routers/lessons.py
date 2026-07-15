@@ -2,17 +2,33 @@ from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 from app.schemas.lesson import LessonCreate, LessonResponse, LessonUpdate
 from app.dependencies.database import get_db
-from app.services.lesson import create_lesson_service, delete_lesson_service, get_lesson_by_id_service, get_lessons_service, update_lesson_service
+from app.services.lesson import (
+    create_lesson_service,
+    delete_lesson_service,
+    get_lesson_by_id_service,
+    get_lessons_service,
+    update_lesson_service,
+    get_today_lesson_service)
 
 router = APIRouter(prefix="/lessons", tags=["Занятия"])
 
 @router.get("/",
             response_model=list[LessonResponse],
             status_code=status.HTTP_200_OK,
-            summary="Получить все занятия")
-def get_lessons(db: Session = Depends(get_db)) -> list[LessonResponse]:
-    return get_lessons_service(db)
+            summary="Получить занятия")
+def get_lessons(
+    day: int | None = None,
+    db: Session = Depends(get_db)) -> list[LessonResponse]:
+    return get_lessons_service(day=day, db=db)
 
+@router.get("/today",
+            response_model=list[LessonResponse],
+            status_code=status.HTTP_200_OK,
+            summary="Получить сегодняшние занятия")
+def get_today_lessons(
+    db: Session = Depends(get_db)
+) -> list[LessonResponse]:
+    return get_today_lesson_service(db=db)
 
 @router.get("/{lesson_id}",
             response_model=LessonResponse,
