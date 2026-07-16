@@ -2,9 +2,10 @@ from sqlalchemy.orm import Session
 from app.schemas.subscription import SubscriptionCreate, SubscriptionResponse, SubscriptionUpdate
 from app.models.subscription import Subscription
 from app.models.student import Student
+from app.models.lesson import Lesson
 from fastapi import HTTPException, status
 from sqlalchemy import or_
-from datetime import date
+from datetime import date, timedelta
 
 
 
@@ -41,12 +42,27 @@ def get_subscription_by_id_service(db: Session, subscription_id: int) -> Subscri
 #Создание
 def create_subscription_service(db: Session, subscription: SubscriptionCreate) -> Subscription:
     student = db.get(Student, subscription.student_id)
+
     if student is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Ученик не найден")
     
-    db_subscription = Subscription(**subscription.model_dump())
+    lesson_weekdays = set([lesson.day for lesson in db.query(Lesson).filter(Lesson.student_id == subscription.student_id).all()])
+    current_date = subscription.start_date
+    count_lessons = 0
+    while current_date <= subscription.end_date:
+        weekday = current_date.weekday()
+        if weekday in lesson_weekdays:
+            count_lessons += 1
+        
+        current_date += timedelta(days=1)
+    
+    db_subscription = subscription.model_dump()
+    total_price = count_lessons * db_subscription["price_for_one_lesson"]
+    db_subscription["planned_lessons"] = count_lessons
+    db_subscription["total_price"] = total_price
+    db_subscription = Subscription(**db_subscription)
     db.add(db_subscription)
     db.commit()
     db.refresh(db_subscription)

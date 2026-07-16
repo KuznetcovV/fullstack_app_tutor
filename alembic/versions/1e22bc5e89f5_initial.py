@@ -1,8 +1,8 @@
 """Initial
 
-Revision ID: 55a889727d6a
+Revision ID: 1e22bc5e89f5
 Revises: 
-Create Date: 2026-07-13 14:11:27.939277
+Create Date: 2026-07-16 17:47:10.710098
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '55a889727d6a'
+revision: str = '1e22bc5e89f5'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -51,9 +51,10 @@ def upgrade() -> None:
     sa.Column('student_id', sa.Integer(), nullable=False),
     sa.Column('start_date', sa.Date(), nullable=False),
     sa.Column('end_date', sa.Date(), nullable=False),
-    sa.Column('price', sa.Numeric(precision=8, scale=2), nullable=False),
+    sa.Column('price_for_one_lesson', sa.Numeric(precision=8, scale=2), nullable=False),
     sa.Column('is_paid', sa.Boolean(), nullable=False),
     sa.Column('planned_lessons', sa.Integer(), nullable=False),
+    sa.Column('total_price', sa.Numeric(precision=8, scale=2), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.ForeignKeyConstraint(['student_id'], ['students.id'], ondelete='CASCADE'),

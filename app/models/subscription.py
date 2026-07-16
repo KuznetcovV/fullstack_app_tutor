@@ -15,11 +15,13 @@ class Subscription(TimestampMixin, Base):
     start_date: Mapped[date] = mapped_column(Date)
     end_date: Mapped[date] = mapped_column(Date)
 
-    price: Mapped[Decimal] = mapped_column(Numeric(8, 2))
+    price_for_one_lesson: Mapped[Decimal] = mapped_column(Numeric(8, 2))
 
     is_paid: Mapped[bool] = mapped_column(Boolean, default=False)
 
     planned_lessons: Mapped[int] = mapped_column(default=0)
+
+    total_price: Mapped[Decimal] = mapped_column(Numeric(8, 2))
 
     student: Mapped["Student"] = relationship(
         back_populates="subscriptions"
