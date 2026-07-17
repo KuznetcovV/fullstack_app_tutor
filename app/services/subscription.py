@@ -40,29 +40,51 @@ def get_subscription_by_id_service(db: Session, subscription_id: int) -> Subscri
     return db.get(Subscription, subscription_id)
 
 #Создание
-def create_subscription_service(db: Session, subscription: SubscriptionCreate) -> Subscription:
+def create_subscription_service(
+    db: Session,
+    subscription: SubscriptionCreate
+) -> Subscription:
+
     student = db.get(Student, subscription.student_id)
 
     if student is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Ученик не найден")
-    
-    lesson_weekdays = set([lesson.day for lesson in db.query(Lesson).filter(Lesson.student_id == subscription.student_id).all()])
+            detail="Ученик не найден"
+        )
+
+    lessons = (
+        db.query(Lesson)
+        .filter(Lesson.student_id == subscription.student_id)
+        .all()
+    )
+
+    lessons_per_weekday = {}
+
+    for lesson in lessons:
+        lessons_per_weekday[lesson.day] = (
+            lessons_per_weekday.get(lesson.day, 0) + 1
+        )
+
     current_date = subscription.start_date
     count_lessons = 0
+
     while current_date <= subscription.end_date:
         weekday = current_date.weekday()
-        if weekday in lesson_weekdays:
-            count_lessons += 1
-        
+
+        count_lessons += lessons_per_weekday.get(weekday, 0)
+
         current_date += timedelta(days=1)
-    
-    db_subscription = subscription.model_dump()
-    total_price = count_lessons * db_subscription["price_for_one_lesson"]
-    db_subscription["planned_lessons"] = count_lessons
-    db_subscription["total_price"] = total_price
-    db_subscription = Subscription(**db_subscription)
+
+    subscription_data = subscription.model_dump()
+
+    subscription_data["planned_lessons"] = count_lessons
+    subscription_data["total_price"] = (
+        count_lessons * subscription_data["price_for_one_lesson"]
+    )
+
+    db_subscription = Subscription(**subscription_data)
+
     db.add(db_subscription)
     db.commit()
     db.refresh(db_subscription)
