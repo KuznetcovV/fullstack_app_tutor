@@ -2,8 +2,9 @@ from sqlalchemy.orm import Session
 from app.models.lesson import Lesson
 from app.models.student import Student
 from app.schemas.lesson import LessonCreate, LessonUpdate
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 from datetime import date
+
 #Получение
 def get_lessons_service(
         day: int | None,
@@ -34,6 +35,8 @@ def create_lesson_service(db: Session, lesson: LessonCreate) -> Lesson:
             status_code=404,
             detail="Ученик не найден")
     
+    check_lessons_intersection(db=db, lesson=lesson)
+
     db_lesson = Lesson(**lesson.model_dump())
 
     db.add(db_lesson)
@@ -62,8 +65,12 @@ def update_lesson_service(db: Session,
     
     update_data = data.model_dump(exclude_unset=True)
 
+    
+
     for field, value in update_data.items():
         setattr(lesson, field, value)
+
+    check_lessons_intersection(db=db, lesson=lesson, exclude_id=lesson.id)
 
     db.commit()
     db.refresh(lesson)
@@ -81,3 +88,20 @@ def delete_lesson_service(db: Session,
     db.commit()
 
     return lesson
+
+
+#Вспомогательные функции
+def check_lessons_intersection(db: Session, lesson: Lesson | LessonCreate, exclude_id: int | None = None):
+    query = db.query(Lesson).filter(
+        Lesson.day == lesson.day
+    )
+
+    if exclude_id is not None:
+        query = query.filter(Lesson.id != exclude_id)
+
+    lessons = query.all()
+    
+    for existing in lessons:
+        if lesson.time_start < existing.time_end and lesson.time_end > existing.time_start:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT,
+                                detail="Указанное время занятия пересекается с уже существующим")

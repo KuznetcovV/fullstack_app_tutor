@@ -44,8 +44,6 @@ class SubscriptionUpdate(BaseModel):
     end_date: date | None = None
     price_for_one_lesson: Decimal | None = None
     is_paid: bool | None = None
-    planned_lessons: int | None = None
-    total_price: Decimal | None = None
 
     @field_validator("price_for_one_lesson")
     @classmethod
@@ -54,23 +52,6 @@ class SubscriptionUpdate(BaseModel):
             raise ValueError(
                 "Цена не может быть отрицательной"
             )
-        
-    @field_validator("planned_lessons")
-    @classmethod
-    def validate_planned_lessons(cls, value):
-        if value <= 0:
-            raise ValueError(
-                "Кол-во занятий должно быть положительным числом"
-            )
-    
-    @field_validator("total_price")
-    @classmethod
-    def validate_total_price(cls, value):
-        if value < 0:
-            raise ValueError(
-                "Стоимость абонемента не может быть отрицательной"
-            )
-
 
     @model_validator(mode="after")
     def validate_date(self):

@@ -78,11 +78,32 @@ def get_subscriptions_for_student_service(db: Session, student_id: int) -> list[
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ученик не найден")
     
     return db.query(Subscription).filter(Subscription.student_id == student_id).all()
+
+
 #Создание
 
 def create_student_service(db: Session, data: StudentCreate):
 
+    query = (
+        db.query(Student)
+        .filter(
+            Student.first_name == data.first_name,
+            Student.last_name == data.last_name,
+        )
+    )
+
+    if data.phone is not None:
+        query = query.filter(Student.phone == data.phone)
+
+    existing = query.first()
+
     student = Student(**data.model_dump())
+
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Такой ученик уже существует"
+        )
 
     db.add(student)
     db.commit()
