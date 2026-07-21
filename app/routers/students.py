@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends, Response, status
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.dependencies.database import get_db
 from app.schemas.student import StudentCreate, StudentResponse, StudentUpdate
 from app.schemas.lesson import LessonResponse
@@ -27,31 +27,31 @@ router = APIRouter(prefix="/students", tags=["Ученики"])
             response_model=list[StudentResponse],
             status_code=status.HTTP_200_OK,
             summary="Получить список учеников")
-def get_students(
+async def get_students(
     number_of_class: int | None = None,
     is_active: bool | None = None,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
     ) -> list[StudentResponse]:
-    return get_students_service(db, number_of_class, is_active)
+    return await get_students_service(db, number_of_class, is_active)
 
 
 @router.get("/search",
             response_model=list[StudentResponse],
             status_code=status.HTTP_200_OK,
             summary="Поиск по имени/фамилии/полному имени")
-def search_students(
+async def search_students(
     query: str,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ) -> list[StudentResponse]:
-    return search_students_service(query=query, db=db)
+    return await search_students_service(query=query, db=db)
 
 
 @router.get("/{student_id}",
             response_model=StudentResponse,
             status_code=status.HTTP_200_OK,
             summary="Получить конкретного ученика")
-def get_student_by_id(student_id: int, db: Session = Depends(get_db)) -> StudentResponse:
-    student = get_student_by_id_service(db, student_id)
+async def get_student_by_id(student_id: int, db: AsyncSession = Depends(get_db)) -> StudentResponse:
+    student = await get_student_by_id_service(db, student_id)
 
     if student is None:
         raise HTTPException(status_code=404, detail="Ученик не найден")
@@ -62,33 +62,33 @@ def get_student_by_id(student_id: int, db: Session = Depends(get_db)) -> Student
             response_model=list[LessonLogResponse],
             status_code=status.HTTP_200_OK,
             summary="Получение всех записей о занятиях ученика")
-def get_lesson_logs_for_student(
+async def get_lesson_logs_for_student(
     student_id: int,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
     ) -> list[LessonLogResponse]:
-    lesson_logs = get_lesson_logs_for_student_service(db=db, student_id=student_id)
+    lesson_logs = await get_lesson_logs_for_student_service(db=db, student_id=student_id)
     return lesson_logs
 
 @router.get("/{student_id}/lessons",
             response_model=list[LessonResponse],
             status_code=status.HTTP_200_OK,
             summary="Получение всех занятий ученика")
-def get_lessons_for_student(
+async def get_lessons_for_student(
     student_id: int,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
     ) -> list[LessonResponse]:
-    lessons = get_lessons_for_student_service(db=db, student_id=student_id)
+    lessons = await get_lessons_for_student_service(db=db, student_id=student_id)
     return lessons
 
 @router.get("/{student_id}/subscriptions",
             response_model=list[SubscriptionResponse],
             status_code=status.HTTP_200_OK,
             summary="Получение всех абонементов ученика")
-def get_subscriptions_for_student(
+async def get_subscriptions_for_student(
     student_id: int,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ) -> list[SubscriptionResponse]:
-    subscriptions = get_subscriptions_for_student_service(
+    subscriptions = await get_subscriptions_for_student_service(
         db=db,
         student_id=student_id
     )
@@ -98,11 +98,11 @@ def get_subscriptions_for_student(
             response_model=SubscriptionResponse,
             status_code=status.HTTP_200_OK,
             summary="Получение активного абонемента для ученика")
-def get_active_subscription_for_student(
+async def get_active_subscription_for_student(
     student_id: int,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ) -> SubscriptionResponse:
-    subscription = get_active_subscription_for_student_service(
+    subscription = await get_active_subscription_for_student_service(
         student_id=student_id, db=db
     )
     return subscription
@@ -111,21 +111,21 @@ def get_active_subscription_for_student(
             summary="Добавление ученика",
             status_code=status.HTTP_201_CREATED,
             response_model=StudentResponse)
-def create_student(data: StudentCreate,
-                   db: Session = Depends(get_db)):
-    return create_student_service(db=db, data=data)
+async def create_student(data: StudentCreate,
+                   db: AsyncSession = Depends(get_db)):
+    return await create_student_service(db=db, data=data)
 
 
 @router.patch("/{student_id}",
               summary="Обновление данных ученика",
               status_code=status.HTTP_200_OK,
               response_model=StudentResponse)
-def update_student(student_id: int,
+async def update_student(student_id: int,
                    data: StudentUpdate,
-                   db: Session = Depends(get_db)
+                   db: AsyncSession = Depends(get_db)
                    ):
     
-    student = update_student_service(db, student_id, data)
+    student = await update_student_service(db, student_id, data)
 
     if student is None:
         raise HTTPException(
@@ -139,8 +139,8 @@ def update_student(student_id: int,
 @router.delete("/{student_id}",
                status_code=status.HTTP_204_NO_CONTENT,
                summary="Удаление ученика")
-def remove_student(student_id: int, db: Session = Depends(get_db)):
-    student = delete_student_service(db, student_id)
+async def remove_student(student_id: int, db: AsyncSession = Depends(get_db)):
+    student = await delete_student_service(db, student_id)
 
     if student is None:
         raise HTTPException(

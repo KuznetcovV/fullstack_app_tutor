@@ -1,4 +1,5 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from app.models.lesson import Lesson
 from app.models.student import Student
 from app.schemas.lesson import LessonCreate, LessonUpdate
@@ -6,58 +7,62 @@ from fastapi import HTTPException, status
 from datetime import date
 
 #Получение
-def get_lessons_service(
+async def get_lessons_service(
         day: int | None,
-        db: Session
+        db: AsyncSession
         ) -> list[Lesson]:
     
-    lessons = db.query(Lesson)
+    query = select(Lesson)
+
     if day is not None:
-        lessons = lessons.filter(Lesson.day == day)
-    
-    return lessons.all()
+        query = query.where(Lesson.day == day)
 
-def get_lesson_by_id_service(db: Session, lesson_id: int) -> Lesson | None:
-    return db.get(Lesson, lesson_id)
+    result = await db.execute(query)
+    return result.scalars().all()
 
 
-def get_today_lesson_service(db: Session) -> list[Lesson]:
+async def get_lesson_by_id_service(db: AsyncSession, lesson_id: int) -> Lesson | None:
+    return await db.get(Lesson, lesson_id)
+
+
+async def get_today_lesson_service(db: AsyncSession) -> list[Lesson]:
     today = date.today().weekday()
-    lessons = db.query(Lesson).filter(Lesson.day == today).all()
+    result = await db.execute(select(Lesson).where(Lesson.day == today))
+    lessons = result.scalars().all()
     return lessons
 
 #Создание
-def create_lesson_service(db: Session, lesson: LessonCreate) -> Lesson:
-    student = db.get(Student, lesson.student_id)
+async def create_lesson_service(db: AsyncSession, lesson: LessonCreate) -> Lesson:
+    student = await db.get(Student, lesson.student_id)
 
     if student is None:
         raise HTTPException(
             status_code=404,
             detail="Ученик не найден")
     
-    check_lessons_intersection(db=db, lesson=lesson)
+    await check_lessons_intersection(db=db, lesson=lesson)
 
     db_lesson = Lesson(**lesson.model_dump())
 
     db.add(db_lesson)
-    db.commit()
-    db.refresh(db_lesson)
+    await db.commit()
+    await db.refresh(db_lesson)
 
     return db_lesson
 
 #Обновление
-def update_lesson_service(db: Session,
+async def update_lesson_service(db: AsyncSession,
                           lesson_id: int,
                           data: LessonUpdate
                           ) -> Lesson | None:
     
-    lesson = db.get(Lesson, lesson_id)
+    lesson = await db.get(Lesson, lesson_id)
 
     if lesson is None:
         return None
 
     if data.student_id is not None:
-        student = db.get(Student, data.student_id)
+        student = await db.get(Student, data.student_id)
 
         if student is None:
             raise HTTPException(status_code=404,
@@ -70,36 +75,35 @@ def update_lesson_service(db: Session,
     for field, value in update_data.items():
         setattr(lesson, field, value)
 
-    check_lessons_intersection(db=db, lesson=lesson, exclude_id=lesson.id)
+    await check_lessons_intersection(db=db, lesson=lesson, exclude_id=lesson.id)
 
-    db.commit()
-    db.refresh(lesson)
+    await db.commit()
+    await db.refresh(lesson)
 
     return lesson
 
 #Удаление
-def delete_lesson_service(db: Session,
+async def delete_lesson_service(db: AsyncSession,
                           lesson_id: int) -> Lesson | None:
-    lesson = db.get(Lesson, lesson_id)
+    lesson = await db.get(Lesson, lesson_id)
     if lesson is None:
         return None
     
     db.delete(lesson)
-    db.commit()
+    await db.commit()
 
     return lesson
 
 
 #Вспомогательные функции
-def check_lessons_intersection(db: Session, lesson: Lesson | LessonCreate, exclude_id: int | None = None):
-    query = db.query(Lesson).filter(
-        Lesson.day == lesson.day
-    )
+async def check_lessons_intersection(db: AsyncSession, lesson: Lesson | LessonCreate, exclude_id: int | None = None):
+    query = select(Lesson).where(Lesson.day == lesson.day)
 
     if exclude_id is not None:
-        query = query.filter(Lesson.id != exclude_id)
+        query = query.where(Lesson.id != exclude_id)
 
-    lessons = query.all()
+    result = await db.execute(query)
+    lessons = result.scalars().all()
     
     for existing in lessons:
         if lesson.time_start < existing.time_end and lesson.time_end > existing.time_start:

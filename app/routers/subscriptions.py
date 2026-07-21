@@ -1,9 +1,8 @@
 from fastapi import APIRouter, Depends, Response, status, HTTPException
 from app.services.subscription import create_subscription_service, delete_subscription_service, get_subscriptions_service, get_subscription_by_id_service, update_subscription_service
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.dependencies.database import get_db
 from app.schemas.subscription import SubscriptionResponse, SubscriptionCreate, SubscriptionUpdate
-from app.models.subscription import Subscription
 
 router = APIRouter(prefix="/subscriptions", tags=["Абонементы"])
 
@@ -11,10 +10,10 @@ router = APIRouter(prefix="/subscriptions", tags=["Абонементы"])
             response_model=list[SubscriptionResponse],
             status_code=status.HTTP_200_OK,
             summary="Получить абонементы")
-def get_subscriptions(is_active: bool | None = None,
+async def get_subscriptions(is_active: bool | None = None,
                       is_paid: bool | None = None,
-                      db: Session = Depends(get_db)) -> list[SubscriptionResponse]:
-    return get_subscriptions_service(
+                      db: AsyncSession = Depends(get_db)) -> list[SubscriptionResponse]:
+    return await get_subscriptions_service(
         is_active=is_active,
         is_paid=is_paid,
         db=db)
@@ -23,11 +22,11 @@ def get_subscriptions(is_active: bool | None = None,
             response_model=SubscriptionResponse,
             status_code=status.HTTP_200_OK,
             summary="Получение абонемента по id")
-def get_subscription_by_id(
+async def get_subscription_by_id(
     subscription_id: int,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
     ) -> SubscriptionResponse:
-    subscription = get_subscription_by_id_service(
+    subscription = await get_subscription_by_id_service(
         db=db,
         subscription_id=subscription_id
         )
@@ -42,22 +41,22 @@ def get_subscription_by_id(
             response_model=SubscriptionResponse,
             status_code=status.HTTP_201_CREATED,
             summary="Создание абонемента")
-def create_subscription(
+async def create_subscription(
     subscription: SubscriptionCreate,
-    db: Session = Depends(get_db)) -> SubscriptionResponse:
-    return create_subscription_service(db=db, subscription=subscription)
+    db: AsyncSession = Depends(get_db)) -> SubscriptionResponse:
+    return await create_subscription_service(db=db, subscription=subscription)
 
 
 @router.patch("/{subscription_id}",
               response_model=SubscriptionResponse,
               status_code=status.HTTP_200_OK,
               summary="Обновление данных абонемента")
-def update_subscription(
+async def update_subscription(
     subscription_id: int,
     data: SubscriptionUpdate,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
     ) -> SubscriptionResponse:
-    subscription = update_subscription_service(
+    subscription = await update_subscription_service(
         db=db,
         subscription_id=subscription_id,
         data=data)
@@ -72,11 +71,11 @@ def update_subscription(
 @router.delete("/{subscription_id}",
                status_code=status.HTTP_204_NO_CONTENT,
                summary="Удаление абонемента")
-def remove_subscription(
+async def remove_subscription(
     subscription_id: int,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
     ):
-    subscription = delete_subscription_service(
+    subscription = await  delete_subscription_service(
         subscription_id=subscription_id,
         db=db
         )

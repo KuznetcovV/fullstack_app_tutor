@@ -6,6 +6,10 @@ echo "Applying migrations..."
 
 alembic upgrade head
 
+echo "Adding initial data..."
+
+python -m app.models.seed
+
 echo "Starting FastAPI..."
 
 uvicorn app.main:app \
