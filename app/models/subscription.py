@@ -33,4 +33,4 @@ class Subscription(TimestampMixin, Base):
     
     @property
     def full_cost(self):
-        return self.planned_lessons * self.price
+        return self.planned_lessons * self.price_for_one_lesson

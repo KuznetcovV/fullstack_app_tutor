@@ -22,16 +22,13 @@ async def get_subscriptions_service(
         ) -> list[Subscription]:
     today = date.today()
     query = select(Subscription)
-    if is_active == True:
+    if is_active is True:
         query = query.where(
             Subscription.start_date <= today,
             Subscription.end_date >= today
             )
-        # subscriptions = subscriptions.filter(
-        #     Subscription.start_date <= today,
-        #     Subscription.end_date >= today
-        # )
-    elif is_active == False:
+
+    elif is_active is False:
         query = query.where(
             or_(
                 Subscription.start_date > today,
@@ -169,11 +166,6 @@ async def calculate_subscription(
     query = select(Lesson).where(Lesson.student_id == student_id)
     result = await db.execute(query)
     lessons = result.scalars().all()
-    # lessons = (
-    #     db.query(Lesson)
-    #     .filter(Lesson.student_id == student_id)
-    #     .all()
-    # )
 
     lessons_per_weekday: dict[int, int] = {}
 
@@ -204,15 +196,12 @@ async def check_existing_lessons_for_subscription(db: AsyncSession, student_id: 
     query = select(Lesson).where(Lesson.student_id == student_id)
     result = await db.execute(query)
     lesson_exists = result.scalars().first()
-    #lesson_exists = db.query(Lesson).filter(Lesson.student_id == student_id).first()
+    
     if lesson_exists is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail="Для создания абонемента у ученика должны быть занятия в расписании")
     
 async def check_intersection_for_existing_subscriptions(db: AsyncSession, subscription: SubscriptionCreate | Subscription, exclude_id: int | None = None):
-    # query = db.query(Subscription).filter(
-    #     Subscription.student_id == subscription.student_id
-    # )
     query = select(Subscription).where(Subscription.student_id == subscription.student_id)
 
     if exclude_id is not None:
@@ -220,7 +209,6 @@ async def check_intersection_for_existing_subscriptions(db: AsyncSession, subscr
     
     result = await db.execute(query)
     existing_subscriptions = result.scalars().all()
-    # existing_subscriptions = query.all()
     
     for existing in existing_subscriptions:
         if subscription.start_date <= existing.end_date and subscription.end_date >= existing.start_date:
