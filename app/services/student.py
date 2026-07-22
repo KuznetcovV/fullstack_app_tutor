@@ -1,4 +1,5 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from app.models.student import Student
 from app.models.lesson import Lesson
 from app.models.lesson_log import LessonLog
@@ -10,92 +11,116 @@ from datetime import date
 
 #Получение
 
-def get_students_service(
-        db: Session, 
+async def get_students_service(
+        db: AsyncSession, 
         number_of_class: int | None, 
         is_active: bool | None
         ) -> list[Student]:
-    student_query = db.query(Student)
+    query = select(Student)
 
     if number_of_class is not None:
-        student_query = student_query.filter(Student.number_of_class == number_of_class)
+        query = query.where(Student.number_of_class == number_of_class)
 
     if is_active is not None:
-        student_query = student_query.filter(Student.is_active == is_active)
+        query = query.where(Student.is_active == is_active)
 
-    return student_query.all()
+    result = await db.execute(query)
+    students = result.scalars().all()
+
+    return students
 
 
-def search_students_service(db: Session, query: str) -> list[Student]:
-    return (
-        db.query(Student).filter(
-            or_(
-                Student.first_name.ilike(f"%{query}%"),
+async def search_students_service(db: AsyncSession, query: str) -> list[Student]:
+    query = select(Student).where(or_(Student.first_name.ilike(f"%{query}%"),
                 Student.last_name.ilike(f"%{query}%"),
                 func.concat(
                     Student.first_name, " ", Student.last_name
-                ).ilike(f"%{query}%")
-            )
-        ).all()
-    )
+                ).ilike(f"%{query}%")))
+    
+    result = await db.execute(query)
+    return result.scalars().all()
+    
+    # return (
+    #     db.query(Student).filter(
+    #         or_(
+    #             Student.first_name.ilike(f"%{query}%"),
+    #             Student.last_name.ilike(f"%{query}%"),
+    #             func.concat(
+    #                 Student.first_name, " ", Student.last_name
+    #             ).ilike(f"%{query}%")
+    #         )
+    #     ).all()
+    # )
     
 
-def get_student_by_id_service(db: Session, student_id: int) -> Student | None:
-    return db.get(Student, student_id)
+async def get_student_by_id_service(db: AsyncSession, student_id: int) -> Student | None:
+    return await db.get(Student, student_id)
 
-def get_lessons_for_student_service(db: Session, student_id: int) -> list[Lesson]:
-    student = db.get(Student, student_id)
+async def get_lessons_for_student_service(db: AsyncSession, student_id: int) -> list[Lesson]:
+    student = await db.get(Student, student_id)
     if student is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ученик не найден")
     
-    return db.query(Lesson).filter(Lesson.student_id == student_id).all()
+    query = select(Lesson).where(Lesson.student_id == student_id)
+    result = await db.execute(query)
+    return result.scalars().all()
 
-def get_lesson_logs_for_student_service(db: Session, student_id: int) -> list[LessonLog]:
-    student = db.get(Student, student_id)
+async def get_lesson_logs_for_student_service(db: AsyncSession, student_id: int) -> list[LessonLog]:
+    student = await db.get(Student, student_id)
     if student is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ученик не найден")
     
-    return db.query(LessonLog).filter(LessonLog.student_id == student_id).all()
+    query = select(LessonLog).where(LessonLog.student_id == student_id)
+    result = await db.execute(query)
+    return result.scalars().all()
 
-def get_active_subscription_for_student_service(db: Session, student_id: int) -> Subscription:
+
+async def get_active_subscription_for_student_service(db: AsyncSession, student_id: int) -> Subscription:
     today = date.today()
-    student = db.get(Student, student_id)
+    student = await db.get(Student, student_id)
     if student is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ученик не найден")
     
-    subscription = db.query(Subscription).filter(
+    query = select(Subscription).where(
         Subscription.student_id == student_id,
         Subscription.start_date <= today,
-        Subscription.end_date >= today).first()
+        Subscription.end_date >= today)
     
+    result = await db.execute(query)
+    subscription = result.scalars().first()
+
     if subscription is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Активных абонементов нет")
     return subscription
 
-def get_subscriptions_for_student_service(db: Session, student_id: int) -> list[Subscription]:
-    student = db.get(Student, student_id)
+async def get_subscriptions_for_student_service(db: AsyncSession, student_id: int) -> list[Subscription]:
+    student = await db.get(Student, student_id)
     if student is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ученик не найден")
     
-    return db.query(Subscription).filter(Subscription.student_id == student_id).all()
+    query = select(Subscription).where(Subscription.student_id == student_id)
+    result = await db.execute(query)
+    return result.scalars().all()
 
 
 #Создание
 
-def create_student_service(db: Session, data: StudentCreate):
+async def create_student_service(db: AsyncSession, data: StudentCreate) -> Student:
 
     query = (
-        db.query(Student)
-        .filter(
+        select(Student)
+        .where(
             Student.first_name == data.first_name,
             Student.last_name == data.last_name,
         )
     )
 
     if data.phone is not None:
-        query = query.filter(Student.phone == data.phone)
+        query = query.where(Student.phone == data.phone)
 
-    existing = query.first()
+    result = await db.execute(query)
+
+    existing = result.scalars().first()
 
     student = Student(**data.model_dump())
 
@@ -106,19 +131,20 @@ def create_student_service(db: Session, data: StudentCreate):
         )
 
     db.add(student)
-    db.commit()
-    db.refresh(student)
+    await db.commit()
+    await db.refresh(student)
     return student
 
 #Обновление
 
-def update_student_service(db: Session, 
+async def update_student_service(db: AsyncSession, 
                            student_id: int, 
                            data: StudentUpdate,
                            ) -> Student | None:
     
 
-    student = db.query(Student).filter(Student.id == student_id).first()
+    student = await db.get(Student, student_id)
+
     
     if student is None:
         return None
@@ -128,19 +154,21 @@ def update_student_service(db: Session,
     for field, value in update_data.items():
         setattr(student, field, value)
 
-    db.commit()
-    db.refresh(student)
+    await db.commit()
+    await db.refresh(student)
 
     return student
 
 
 #Удаление
 
-def delete_student_service(db: Session, student_id: int):
-    student = db.get(Student, student_id)
+async def delete_student_service(db: AsyncSession, student_id: int) -> Student | None:
+    student = await db.get(Student, student_id)
 
-    if student:
-        db.delete(student)
-        db.commit()
+    if student is None:
+        return None
+    
+    db.delete(student)
+    await db.commit()
 
     return student

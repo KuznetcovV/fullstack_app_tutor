@@ -1,11 +1,12 @@
 from decimal import Decimal
 
-from sqlalchemy.orm import Session
-from app.schemas.subscription import SubscriptionCreate, SubscriptionResponse, SubscriptionUpdate
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from app.schemas.subscription import SubscriptionCreate, SubscriptionUpdate
 from app.models.subscription import Subscription
 from app.models.student import Student
 from app.models.lesson import Lesson
-from fastapi import Depends, HTTPException, status
+from fastapi import HTTPException, status
 from sqlalchemy import or_
 from datetime import date, timedelta
 
@@ -14,43 +15,50 @@ from app.dependencies.database import get_db
 
 
 #Получение
-def get_subscriptions_service(
+async def get_subscriptions_service(
         is_active: bool | None,
         is_paid: bool | None,
-        db: Session
+        db: AsyncSession
         ) -> list[Subscription]:
     today = date.today()
-    subscriptions = db.query(Subscription)
+    query = select(Subscription)
     if is_active == True:
-        subscriptions = subscriptions.filter(
+        query = query.where(
             Subscription.start_date <= today,
             Subscription.end_date >= today
-        )
+            )
+        # subscriptions = subscriptions.filter(
+        #     Subscription.start_date <= today,
+        #     Subscription.end_date >= today
+        # )
     elif is_active == False:
-        subscriptions = subscriptions.filter(
+        query = query.where(
             or_(
                 Subscription.start_date > today,
                 Subscription.end_date < today
             ))
 
-    if is_paid == True:
-        subscriptions = subscriptions.filter(
+    if is_paid is not None:
+        query = query.where(
             Subscription.is_paid == is_paid
         )
-        
-    return subscriptions.all()
+    
+    result = await db.execute(query)
+    subscriptions = result.scalars().all()
 
-def get_subscription_by_id_service(db: Session, subscription_id: int) -> Subscription | None:
-    return db.get(Subscription, subscription_id)
+    return subscriptions
+
+async def get_subscription_by_id_service(db: AsyncSession, subscription_id: int) -> Subscription | None:
+    return await db.get(Subscription, subscription_id)
 
 
 #Создание
-def create_subscription_service(
-    db: Session,
+async def create_subscription_service(
+    db: AsyncSession,
     subscription: SubscriptionCreate
 ) -> Subscription:
 
-    student = db.get(Student, subscription.student_id)
+    student = await db.get(Student, subscription.student_id)
 
     if student is None:
         raise HTTPException(
@@ -58,10 +66,10 @@ def create_subscription_service(
             detail="Ученик не найден"
         )
     
-    check_existing_lessons_for_subscription(db=db, student_id=student.id)
-    check_intersection_for_existing_subscriptions(db=db, subscription=subscription)
+    await check_existing_lessons_for_subscription(db=db, student_id=student.id)
+    await check_intersection_for_existing_subscriptions(db=db, subscription=subscription)
 
-    planned_lessons, total_subscription_price = calculate_subscription(
+    planned_lessons, total_subscription_price = await calculate_subscription(
         db=db,
         student_id=student.id,
         start_date=subscription.start_date,
@@ -77,24 +85,24 @@ def create_subscription_service(
     db_subscription = Subscription(**subscription_data)
 
     db.add(db_subscription)
-    db.commit()
-    db.refresh(db_subscription)
+    await db.commit()
+    await db.refresh(db_subscription)
 
     return db_subscription
 
 
 #Обновление
-def update_subscription_service(db: Session,
+async def update_subscription_service(db: AsyncSession,
                                 subscription_id: int,
                                 data: SubscriptionUpdate
                                 ) -> Subscription | None:
-    subscription = db.get(Subscription, subscription_id)
+    subscription = await db.get(Subscription, subscription_id)
 
     if subscription is None:
         return None
     
     if data.student_id is not None:
-        student = db.get(Student, data.student_id)
+        student = await db.get(Student, data.student_id)
         if student is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -107,7 +115,7 @@ def update_subscription_service(db: Session,
     for field, value in updated_data.items():
         setattr(subscription, field, value)
 
-    check_intersection_for_existing_subscriptions(db=db, subscription=subscription, exclude_id=subscription.id)
+    await check_intersection_for_existing_subscriptions(db=db, subscription=subscription, exclude_id=subscription.id)
 
     need_recalculate = any(
         field in updated_data
@@ -120,7 +128,7 @@ def update_subscription_service(db: Session,
     )
 
     if need_recalculate:
-        planned_lessons, total_price = calculate_subscription(
+        planned_lessons, total_price = await calculate_subscription(
             db=db,
             student_id=subscription.student_id,
             start_date=subscription.start_date,
@@ -131,38 +139,41 @@ def update_subscription_service(db: Session,
         subscription.planned_lessons = planned_lessons
         subscription.total_price = total_price
 
-    db.commit()
-    db.refresh(subscription)
+    await db.commit()
+    await db.refresh(subscription)
 
     return subscription
 
 
 #Удаление
-def delete_subscription_service(
+async def delete_subscription_service(
         subscription_id: int,
-        db: Session) -> Subscription | None:
-    subscription = db.get(Subscription, subscription_id)
+        db: AsyncSession) -> Subscription | None:
+    subscription = await db.get(Subscription, subscription_id)
     if subscription is None:
         return None
     
     db.delete(subscription)
-    db.commit()
+    await db.commit()
 
     return subscription
 
 #вспомогательные функции
-def calculate_subscription(
-        db: Session,
+async def calculate_subscription(
+        db: AsyncSession,
         student_id: int,
         start_date: date,
         end_date: date,
         price_for_one_lesson: Decimal
 ) -> tuple[int, Decimal]:
-    lessons = (
-        db.query(Lesson)
-        .filter(Lesson.student_id == student_id)
-        .all()
-    )
+    query = select(Lesson).where(Lesson.student_id == student_id)
+    result = await db.execute(query)
+    lessons = result.scalars().all()
+    # lessons = (
+    #     db.query(Lesson)
+    #     .filter(Lesson.student_id == student_id)
+    #     .all()
+    # )
 
     lessons_per_weekday: dict[int, int] = {}
 
@@ -189,21 +200,27 @@ def calculate_subscription(
     return count_lessons, total_price
 
 
-def check_existing_lessons_for_subscription(db: Session, student_id: int):
-    lesson_exists = db.query(Lesson).filter(Lesson.student_id == student_id).first()
+async def check_existing_lessons_for_subscription(db: AsyncSession, student_id: int):
+    query = select(Lesson).where(Lesson.student_id == student_id)
+    result = await db.execute(query)
+    lesson_exists = result.scalars().first()
+    #lesson_exists = db.query(Lesson).filter(Lesson.student_id == student_id).first()
     if lesson_exists is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail="Для создания абонемента у ученика должны быть занятия в расписании")
     
-def check_intersection_for_existing_subscriptions(db: Session, subscription: Subscription, exclude_id: int | None = None):
-    query = db.query(Subscription).filter(
-        Subscription.student_id == subscription.student_id
-    )
+async def check_intersection_for_existing_subscriptions(db: AsyncSession, subscription: SubscriptionCreate | Subscription, exclude_id: int | None = None):
+    # query = db.query(Subscription).filter(
+    #     Subscription.student_id == subscription.student_id
+    # )
+    query = select(Subscription).where(Subscription.student_id == subscription.student_id)
 
     if exclude_id is not None:
-        query = query.filter(Subscription.id != exclude_id)
+        query = query.where(Subscription.id != exclude_id)
     
-    existing_subscriptions = query.all()
+    result = await db.execute(query)
+    existing_subscriptions = result.scalars().all()
+    # existing_subscriptions = query.all()
     
     for existing in existing_subscriptions:
         if subscription.start_date <= existing.end_date and subscription.end_date >= existing.start_date:

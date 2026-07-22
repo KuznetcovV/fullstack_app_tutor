@@ -1,11 +1,21 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from app.routers.students import router as students_router
 from app.routers.lessons import router as lessons_router
 from app.routers.subscriptions import router as subscriptions_router
 from app.routers.lesson_logs import router as lesson_logs_router
-from app.core.database import Base, engine
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173"
+        ],
+    allow_credentials=True,
+    allow_methods=['*'],
+    allow_headers=['*'],
+)
+
 
 @app.get('/', summary="Домашняя страница", tags=["Домашняя страница"])
 def home():
