@@ -8,7 +8,7 @@ alembic upgrade head
 
 echo "Adding initial data..."
 
-python -m app.models.seed
+python -m app.scripts.seed
 
 echo "Starting FastAPI..."
 
