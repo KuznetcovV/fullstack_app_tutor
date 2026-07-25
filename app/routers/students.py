@@ -17,11 +17,12 @@ from app.services.student import (
     get_subscriptions_for_student_service,
     get_active_subscription_for_student_service
 )
+from app.dependencies.auth import get_current_user
 
 
 
 
-router = APIRouter(prefix="/students", tags=["Ученики"])
+router = APIRouter(prefix="/students", tags=["Ученики"], dependencies=[Depends(get_current_user)])
 
 @router.get("/", 
             response_model=list[StudentResponse],
