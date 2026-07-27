@@ -40,18 +40,6 @@ async def search_students_service(db: AsyncSession, query: str) -> list[Student]
     result = await db.execute(query)
     return result.scalars().all()
     
-    # return (
-    #     db.query(Student).filter(
-    #         or_(
-    #             Student.first_name.ilike(f"%{query}%"),
-    #             Student.last_name.ilike(f"%{query}%"),
-    #             func.concat(
-    #                 Student.first_name, " ", Student.last_name
-    #             ).ilike(f"%{query}%")
-    #         )
-    #     ).all()
-    # )
-    
 
 async def get_student_by_id_service(db: AsyncSession, student_id: int) -> Student | None:
     return await db.get(Student, student_id)
