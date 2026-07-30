@@ -155,8 +155,9 @@ async def delete_student_service(db: AsyncSession, student_id: int) -> Student |
 
     if student is None:
         return None
+
     
-    db.delete(student)
+    await db.delete(student)
     await db.commit()
 
     return student

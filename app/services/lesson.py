@@ -89,7 +89,7 @@ async def delete_lesson_service(db: AsyncSession,
     if lesson is None:
         return None
     
-    db.delete(lesson)
+    await db.delete(lesson)
     await db.commit()
 
     return lesson

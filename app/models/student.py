@@ -33,13 +33,16 @@ class Student(TimestampMixin, Base):
     )
 
     lessons: Mapped[list["Lesson"]] = relationship(
-        back_populates="student"
+        back_populates="student",
+        cascade="all, delete-orphan"
     )
 
     subscriptions: Mapped[list["Subscription"]] = relationship(
-        back_populates="student"
+        back_populates="student",
+        cascade="all, delete-orphan"
     )
 
     lesson_logs: Mapped[list["LessonLog"]] = relationship(
-        back_populates="student"
+        back_populates="student",
+        cascade="all, delete-orphan"
     )
