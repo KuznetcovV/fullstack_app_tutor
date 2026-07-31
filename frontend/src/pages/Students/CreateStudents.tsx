@@ -1,0 +1,74 @@
+import { useState } from "react";
+import Input from "../../shared/ui/input";
+import Button from "../../shared/ui/button";
+import { studentsApi } from "../../shared/api/students";
+import type { Student } from "../../entities/student";
+
+export default function CreateStudents() {
+  const { create } = studentsApi;
+  const [student, setStudent] = useState<Omit<Student, "id">>({
+    first_name: "",
+    last_name: "",
+    number_of_class: 1,
+  });
+
+  return (
+    <div>
+      <h1>Создание ученика</h1>
+      <Input
+        label="Имя"
+        value={student.first_name || ""}
+        onChange={(value) =>
+          setStudent({ ...student, first_name: String(value) })
+        }
+      />
+      <Input
+        label="Фамилия"
+        value={student.last_name || ""}
+        onChange={(value) =>
+          setStudent({ ...student, last_name: String(value) })
+        }
+      />
+      <Input
+        label="Номер класса"
+        type="number"
+        min={1}
+        max={11}
+        value={String(student.number_of_class || 1)}
+        onChange={(value) =>
+          setStudent({ ...student, number_of_class: Number(value) })
+        }
+      />
+      <Input
+        label="Телефон"
+        value={student.phone || ""}
+        onChange={(value) => setStudent({ ...student, phone: String(value) })}
+      />
+      <Input
+        label="Имя родителя"
+        value={student.parent_name || ""}
+        onChange={(value) =>
+          setStudent({ ...student, parent_name: String(value) })
+        }
+      />
+      <Input
+        label="Телефон родителя"
+        value={student.parent_phone || ""}
+        onChange={(value) =>
+          setStudent({ ...student, parent_phone: String(value) })
+        }
+      />
+      <Input
+        label="Заметки"
+        value={student.notes || ""}
+        onChange={(value) => setStudent({ ...student, notes: String(value) })}
+      />
+      <Button
+        label="Создать"
+        onClick={() => {
+          create(student);
+        }}
+      />
+    </div>
+  );
+}
