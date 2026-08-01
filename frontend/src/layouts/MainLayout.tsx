@@ -1,14 +1,23 @@
-import Sidebar from "./Sidebar";
 import { Outlet } from "react-router-dom";
-import CreateStudents from "../pages/Students/CreateStudents";
-import CreateLessons from "../pages/Lessons/CreateLessons";
-import styles from "./Mainlayout.module.css";
+
+import Sidebar from "./Sidebar";
+import Loader from "../shared/ui/Loader";
+import { useLoader } from "../shared/store/loader";
+
+import styles from "./MainLayout.module.css";
 
 export default function MainLayout() {
+  const { loading } = useLoader();
+
   return (
     <div className={styles.main}>
+      {loading && <Loader />}
+
       <Sidebar />
-      <Outlet />
+
+      <main className={styles.content}>
+        <Outlet />
+      </main>
     </div>
   );
 }
