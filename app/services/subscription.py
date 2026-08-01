@@ -150,7 +150,7 @@ async def delete_subscription_service(
     if subscription is None:
         return None
     
-    db.delete(subscription)
+    await db.delete(subscription)
     await db.commit()
 
     return subscription

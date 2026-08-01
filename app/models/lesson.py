@@ -22,15 +22,18 @@ class Lesson(TimestampMixin, Base):
     )
 
     cancelled_lessons: Mapped[list["CancelledLesson"]] = relationship(
-        back_populates="lesson"
+        back_populates="lesson",
+        cascade="all, delete-orphan"
     )
 
     transferred_lessons: Mapped[list["TransferredLesson"]] = relationship(
-        back_populates="lesson"
+        back_populates="lesson",
+        cascade="all, delete-orphan"
     )
 
     lesson_logs: Mapped[list["LessonLog"]] = relationship(
-        back_populates="lesson"
+        back_populates="lesson",
+        cascade="all, delete-orphan"
     )
 
 

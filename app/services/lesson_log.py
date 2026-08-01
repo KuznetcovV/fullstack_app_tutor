@@ -81,7 +81,7 @@ async def delete_lesson_log_service(db: AsyncSession, lesson_log_id: int) -> Les
     if lesson_log is None:
         return None
     
-    db.delete(lesson_log)
+    await db.delete(lesson_log)
     await db.commit()
 
     return lesson_log

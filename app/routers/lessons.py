@@ -9,8 +9,9 @@ from app.services.lesson import (
     get_lessons_service,
     update_lesson_service,
     get_today_lesson_service)
+from app.dependencies.auth import get_current_user
 
-router = APIRouter(prefix="/lessons", tags=["Занятия"])
+router = APIRouter(prefix="/lessons", tags=["Занятия"], dependencies=[Depends(get_current_user)])
 
 @router.get("/",
             response_model=list[LessonResponse],

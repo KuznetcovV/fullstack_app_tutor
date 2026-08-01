@@ -4,6 +4,7 @@ from app.routers.students import router as students_router
 from app.routers.lessons import router as lessons_router
 from app.routers.subscriptions import router as subscriptions_router
 from app.routers.lesson_logs import router as lesson_logs_router
+from app.routers.auth import router as auth_router
 
 app = FastAPI()
 app.add_middleware(
@@ -21,7 +22,7 @@ app.add_middleware(
 def home():
     return {"message": "Максим, ты уволен"}
 
-
+app.include_router(auth_router)
 app.include_router(students_router)
 app.include_router(lessons_router)
 app.include_router(subscriptions_router)
