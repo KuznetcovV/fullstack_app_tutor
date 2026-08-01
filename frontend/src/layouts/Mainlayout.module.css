@@ -1,17 +1,25 @@
 .main {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  justify-items: center;
-}
-
-/* .content {
   margin-left: 72px;
+
+  min-height: 100vh;
 
   width: calc(100% - 72px);
 
-  padding: 32px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 
   box-sizing: border-box;
-} */
+
+  padding: 32px;
+
+  transition:
+    margin-left 0.25s ease,
+    width 0.25s ease;
+}
+
+.main.expanded {
+  margin-left: 260px;
+
+  width: calc(100% - 260px);
+}

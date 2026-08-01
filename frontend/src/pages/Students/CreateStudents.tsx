@@ -1,12 +1,14 @@
 import { useState } from "react";
 import Input from "../../shared/ui/input";
 import Button from "../../shared/ui/button";
-import { studentsApi } from "../../shared/api/students";
+import { useStudent } from "../../shared/store/studentStore";
 import type { Student } from "../../entities/student";
 import styles from "./CreateStudents.module.css";
+// import { useNavigate } from "react-router-dom";
 
 export default function CreateStudents() {
-  const { create } = studentsApi;
+  const { createStudent } = useStudent();
+  // const navigate = useNavigate();
   const [student, setStudent] = useState<Omit<Student, "id">>({
     first_name: "",
     last_name: "",
@@ -87,7 +89,13 @@ export default function CreateStudents() {
         </div>
 
         <div className={styles.actions}>
-          <Button label="Создать" onClick={() => create(student)} />
+          <Button
+            label="Создать"
+            onClick={() => {
+              createStudent(student);
+              // navigate("/students");
+            }}
+          />
         </div>
       </div>
     </div>

@@ -4,6 +4,7 @@ interface LoaderStore {
   loading: boolean;
   show: () => void;
   hide: () => void;
+  withLoader: <T>(callback: () => Promise<T>) => Promise<T>;
 }
 
 export const useLoaderStore = create<LoaderStore>((set) => ({
@@ -12,18 +13,25 @@ export const useLoaderStore = create<LoaderStore>((set) => ({
   show: () => set({ loading: true }),
 
   hide: () => set({ loading: false }),
+
+  withLoader: async (callback) => {
+    set({ loading: true });
+
+    try {
+      return await callback();
+    } finally {
+      set({ loading: false });
+    }
+  },
 }));
 
 export const useLoader = () => {
-  const loading = useLoaderStore((state) => state.loading);
-
-  const show = useLoaderStore((state) => state.show);
-
-  const hide = useLoaderStore((state) => state.hide);
+  const { loading, show, hide, withLoader } = useLoaderStore();
 
   return {
     loading,
     show,
     hide,
+    withLoader,
   };
 };

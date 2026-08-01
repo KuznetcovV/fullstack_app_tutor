@@ -1,30 +1,37 @@
 import styles from "./input.module.css";
 
-export default function Input({
-  label,
-  value,
-  type,
-  min,
-  max,
-  onChange,
-}: {
+interface InputProps {
   label: string;
   value: string | number;
-  type?: string;
+  type?: "text" | "email" | "password" | "number";
   min?: number;
   max?: number;
   onChange: (value: string | number) => void;
-}) {
+}
+
+export default function Input({
+  label,
+  value,
+  type = "text",
+  min,
+  max,
+  onChange,
+}: InputProps) {
   return (
-    <div className={styles.input}>
-      <label>{label}</label>
+    <fieldset className={styles.input}>
+      <legend>{label}</legend>
+
       <input
-        type={type || "text"}
+        type={type}
         value={value}
         min={min}
         max={max}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => {
+          const value = e.target.value;
+
+          onChange(type === "number" ? Number(value) : value);
+        }}
       />
-    </div>
+    </fieldset>
   );
 }

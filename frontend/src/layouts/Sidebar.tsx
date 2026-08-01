@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { useState } from "react";
 import styles from "./Sidebar.module.css";
+import { useUser } from "../shared/store/userStore";
 
 interface Link {
   path: string;
@@ -9,10 +10,14 @@ interface Link {
   end?: boolean;
   child?: Link[];
 }
+interface SidebarProps {
+  expanded: boolean;
+  setExpanded: React.Dispatch<React.SetStateAction<boolean>>;
+}
 
-export default function Sidebar() {
-  const [expanded, setExpanded] = useState(false);
+export default function Sidebar({ expanded, setExpanded }: SidebarProps) {
   const [openedMenu, setOpenedMenu] = useState<string | null>("students");
+  const { logout } = useUser();
 
   const links: Link[] = [
     {
@@ -112,6 +117,13 @@ export default function Sidebar() {
           </div>
         ))}
       </nav>
+      <div className={styles.footer}>
+        <button className={styles.logout} onClick={logout}>
+          <span>🚪</span>
+
+          {expanded && <span>Выйти</span>}
+        </button>
+      </div>
     </aside>
   );
 }

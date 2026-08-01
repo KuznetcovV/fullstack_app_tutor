@@ -1,34 +1,20 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
-import { studentsApi } from "../../shared/api/students";
-import type { Student } from "../../entities/student";
-import { useLoader } from "../../shared/store/loader";
+import { useStudent } from "../../shared/store/studentStore";
 
 import styles from "./Students.module.css";
 
 const PAGE_SIZE = 10;
 
 export default function Students() {
-  const { getAll } = studentsApi;
-
-  const { show, hide } = useLoader();
-
-  const [students, setStudents] = useState<Student[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
+  const { students, setStudent } = useStudent();
 
   useEffect(() => {
-    const fetchStudents = async () => {
-      try {
-        show();
-        const students = await getAll();
-        setStudents(students.data);
-      } finally {
-        hide();
-      }
-    };
-    fetchStudents();
+    setStudent();
   }, []);
+
+  const [currentPage, setCurrentPage] = useState(1);
 
   const totalPages = Math.ceil(students.length / PAGE_SIZE);
 
@@ -38,7 +24,7 @@ export default function Students() {
 
   return (
     <div className={styles.main}>
-      <h1 className={styles.title}>Пидоры</h1>
+      <h1 className={styles.title}>Ученики</h1>
 
       <div className={styles.tableWrapper}>
         <table className={styles.table}>

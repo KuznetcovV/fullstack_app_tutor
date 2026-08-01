@@ -20,24 +20,24 @@ services:
         condition: service_healthy
 
 
-  frontend:
-    build:
-      context: ./frontend
+  # frontend:
+  #   build:
+  #     context: ./frontend
 
-    container_name: react_frontend
+  #   container_name: react_frontend
 
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+  #   volumes:
+  #     - ./frontend:/app
+  #     - /app/node_modules
 
-    ports:
-      - "5173:5173"
+  #   ports:
+  #     - "5173:5173"
 
-    environment:
-      VITE_API_URL: http://localhost:8000
+  #   environment:
+  #     VITE_API_URL: http://localhost:8000
 
-    depends_on:
-      - backend
+  #   depends_on:
+  #     - backend
 
 
   postgres:

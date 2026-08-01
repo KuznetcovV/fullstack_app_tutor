@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-import { studentsApi } from "../../shared/api/students";
+import { useStudent } from "../../shared/store/studentStore";
 import type { Student } from "../../entities/student";
-import { useLoader } from "../../shared/store/loader";
+import { useLoader } from "../../shared/store/loaderStore";
 
 import Input from "../../shared/ui/input";
 import Button from "../../shared/ui/button";
@@ -15,7 +15,7 @@ export default function UpdateStudents() {
   const navigate = useNavigate();
   const { show, hide } = useLoader();
 
-  const { getById, update } = studentsApi;
+  const { getById, updateStudent } = useStudent();
 
   const [student, setStudent] = useState<Omit<Student, "id">>({
     first_name: "",
@@ -33,7 +33,7 @@ export default function UpdateStudents() {
       try {
         show();
         const student = await getById(id);
-        setStudent(student.data);
+        setStudent(student);
       } finally {
         hide();
       }
@@ -44,7 +44,7 @@ export default function UpdateStudents() {
   const handleUpdate = async () => {
     if (!id) return;
 
-    await update(id, student);
+    await updateStudent(id, student);
 
     navigate("/students");
   };
