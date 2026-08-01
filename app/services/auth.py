@@ -19,7 +19,7 @@ from app.core.security import (
 async def register_service(
         db: AsyncSession,
         data: RegisterRequest
-) -> User:
+) -> TokenResponse:
     
     query = select(User).where(User.login == data.login)
 
@@ -55,7 +55,7 @@ async def register_service(
     await db.commit()
     await db.refresh(user)
 
-    return user
+    return await generate_tokens(db, user)
 
 async def login_service(
         db: AsyncSession,
@@ -84,26 +84,7 @@ async def login_service(
             detail="Неверный логин или пароль"
         )
 
-    access_token = create_access_token(
-        {
-            "sub": str(user.id),
-            "role": user.role.value,
-        }
-    )
-
-    refresh_token = create_refresh_token(
-        {
-            "sub": str(user.id),
-        }
-    )
-
-    user.refresh_token_hash = hash_password(refresh_token)
-    await db.commit()
-
-    return TokenResponse(
-        access_token=access_token,
-        refresh_token=refresh_token
-    )
+    return await generate_tokens(db, user)
 
 
 async def refresh_service(
@@ -177,3 +158,26 @@ async def logout_service(
     return {
         "message": "Successfully logged out"
     }
+
+#Вспомогательные функции
+async def generate_tokens(db: AsyncSession, user: User) -> TokenResponse:
+    access_token = create_access_token(
+        {
+            "sub": str(user.id),
+            "role": user.role.value,
+        }
+    )
+
+    refresh_token = create_refresh_token(
+        {
+            "sub": str(user.id),
+        }
+    )
+
+    user.refresh_token_hash = hash_password(refresh_token)
+    await db.commit()
+
+    return TokenResponse(
+        access_token=access_token,
+        refresh_token=refresh_token,
+    )
