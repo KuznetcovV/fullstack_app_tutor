@@ -4,7 +4,6 @@ from app.models.user import User, UserRole
 from app.core.database import AsyncSession
 from app.schemas.auth import (
     RegisterRequest,
-    LoginRequest,
     TokenResponse
 )
 
