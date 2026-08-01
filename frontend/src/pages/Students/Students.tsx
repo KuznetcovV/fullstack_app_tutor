@@ -38,7 +38,7 @@ export default function Students() {
 
   return (
     <div className={styles.main}>
-      <h1 className={styles.title}>Ученики</h1>
+      <h1 className={styles.title}>Пидоры</h1>
 
       <div className={styles.tableWrapper}>
         <table className={styles.table}>
