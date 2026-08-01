@@ -5,6 +5,7 @@ from app.scripts.seeds.students import seed_students
 from app.scripts.seeds.lessons import seed_lessons
 from app.scripts.seeds.subscriptions import seed_subscriptions
 from app.scripts.seeds.lesson_logs import seed_lesson_logs
+from app.scripts.seeds.users import seed_users
 
 
 async def main():
@@ -13,6 +14,7 @@ async def main():
         await seed_lessons(session)
         await seed_subscriptions(session)
         await seed_lesson_logs(session)
+        await seed_users(session)
 
 
 if __name__ == "__main__":
