@@ -66,7 +66,7 @@ class SubscriptionUpdate(BaseSchema):
     def validate_date(self):
         if (
             self.start_date is not None 
-            and self.self.end_date is not None
+            and self.end_date is not None
             and self.start_date >= self.end_date
             ):
             raise ValueError(
