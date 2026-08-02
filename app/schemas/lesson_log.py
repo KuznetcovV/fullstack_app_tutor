@@ -1,7 +1,8 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, ConfigDict
 from datetime import date
+from app.schemas.base_schemas import BaseSchema
 
-class LessonLogCreate(BaseModel):
+class LessonLogCreate(BaseSchema):
     student_id: int
     lesson_id: int | None = None
     lesson_log_date: date
@@ -43,10 +44,11 @@ class LessonLogResponse(BaseModel):
     grade: int | None = None
     comment: str | None = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(
+        from_attributes=True
+    )
 
-class LessonLogUpdate(BaseModel):
+class LessonLogUpdate(BaseSchema):
     student_id: int | None = None
     lesson_id: int | None = None
     lesson_log_date: date | None = None

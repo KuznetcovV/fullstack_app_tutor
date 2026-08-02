@@ -1,7 +1,8 @@
-from pydantic import BaseModel, model_validator, field_validator
+from pydantic import BaseModel, model_validator, field_validator, ConfigDict
 from datetime import time
+from app.schemas.base_schemas import BaseSchema
 
-class LessonCreate(BaseModel):
+class LessonCreate(BaseSchema):
     student_id: int
     day: int
     time_start: time
@@ -33,10 +34,11 @@ class LessonResponse(BaseModel):
     time_start: time
     time_end: time
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(
+        from_attributes=True
+    )
 
-class LessonUpdate(BaseModel):
+class LessonUpdate(BaseSchema):
     student_id: int | None = None
     day: int | None = None
     time_start: time | None = None

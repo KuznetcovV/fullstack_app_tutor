@@ -1,6 +1,7 @@
 from pydantic import BaseModel
+from app.schemas.base_schemas import BaseSchema
 
-class LoginRequest(BaseModel):
+class LoginRequest(BaseSchema):
     login: str
     password: str
 
@@ -9,12 +10,12 @@ class TokenResponse(BaseModel):
     refresh_token: str
     token_type: str = "bearer"
 
-class RegisterRequest(BaseModel):
+class RegisterRequest(BaseSchema):
     login: str
     email: str | None = None
     password: str
 
-class RefreshRequest(BaseModel):
+class RefreshRequest(BaseSchema):
     refresh_token: str
 
 class LogoutResponse(BaseModel):

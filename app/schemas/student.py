@@ -1,6 +1,7 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, ConfigDict
+from app.schemas.base_schemas import BaseSchema
 
-class StudentCreate(BaseModel):
+class StudentCreate(BaseSchema):
     first_name: str
     last_name: str
     number_of_class: int
@@ -16,8 +17,6 @@ class StudentCreate(BaseModel):
         if value is None:
             return value
 
-        value = value.strip()
-
         if not value:
             raise ValueError("Имя не может быть пустым")
 
@@ -29,7 +28,6 @@ class StudentCreate(BaseModel):
     @field_validator("last_name")
     @classmethod
     def validate_last_name(cls, value):
-        value = value.strip()
 
         if not value:
             raise ValueError("Фамилия не может быть пустой")
@@ -53,8 +51,6 @@ class StudentCreate(BaseModel):
     def validate_phone(cls, value: str | None):
         if value is None:
             return value
-        
-        value = value.strip()
         
         if value.startswith("+7"):
             digits = value[1:]
@@ -95,10 +91,11 @@ class StudentResponse(BaseModel):
     notes: str | None = None
     is_active: bool
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(
+        from_attributes=True
+    )
 
-class StudentUpdate(BaseModel):
+class StudentUpdate(BaseSchema):
     first_name: str | None = None
     last_name: str | None = None
     number_of_class: int | None = None
@@ -114,8 +111,6 @@ class StudentUpdate(BaseModel):
         if value is None:
             return value
 
-        value = value.strip()
-
         if not value:
             raise ValueError("Имя не может быть пустым")
 
@@ -129,8 +124,6 @@ class StudentUpdate(BaseModel):
     def validate_last_name(cls, value):
         if value is None:
             return value
-        
-        value = value.strip()
 
         if not value:
             raise ValueError("Фамилия не может быть пустой")
