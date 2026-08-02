@@ -105,7 +105,7 @@ async def update_subscription_service(db: AsyncSession,
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Ученик не найден")
     
-
+    validate_subscription_dates(subscription=subscription, data=data)
     
     updated_data = data.model_dump(exclude_unset=True)
 
@@ -191,7 +191,6 @@ async def calculate_subscription(
 
     return count_lessons, total_price
 
-
 async def check_existing_lessons_for_subscription(db: AsyncSession, student_id: int):
     query = select(Lesson).where(Lesson.student_id == student_id)
     result = await db.execute(query)
@@ -202,6 +201,7 @@ async def check_existing_lessons_for_subscription(db: AsyncSession, student_id: 
                             detail="Для создания абонемента у ученика должны быть занятия в расписании")
     
 async def check_intersection_for_existing_subscriptions(db: AsyncSession, subscription: SubscriptionCreate | Subscription, exclude_id: int | None = None):
+
     query = select(Subscription).where(Subscription.student_id == subscription.student_id)
 
     if exclude_id is not None:
@@ -213,3 +213,24 @@ async def check_intersection_for_existing_subscriptions(db: AsyncSession, subscr
     for existing in existing_subscriptions:
         if subscription.start_date <= existing.end_date and subscription.end_date >= existing.start_date:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Пересечение дат с существующим абонементом для этого ученика")
+
+def validate_subscription_dates(subscription: Subscription, data: SubscriptionUpdate):
+    if data.start_date is not None and data.end_date is not None:
+        return
+
+    if data.start_date is None:
+        start_date = subscription.start_date
+    else:
+        start_date = data.start_date
+
+    if data.end_date is None:
+        end_date = subscription.end_date
+    else:
+        end_date = data.end_date
+
+    if start_date >= end_date:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Дата начала должна быть меньше даты конца")
+
+    return
+
+    

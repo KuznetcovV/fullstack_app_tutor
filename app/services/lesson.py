@@ -70,6 +70,7 @@ async def update_lesson_service(db: AsyncSession,
     
     update_data = data.model_dump(exclude_unset=True)
 
+    validate_lesson_time(lesson=lesson, data=data)
     
 
     for field, value in update_data.items():
@@ -109,3 +110,22 @@ async def check_lessons_intersection(db: AsyncSession, lesson: Lesson | LessonCr
         if lesson.time_start < existing.time_end and lesson.time_end > existing.time_start:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT,
                                 detail="Указанное время занятия пересекается с уже существующим")
+
+def validate_lesson_time(lesson: Lesson, data: LessonUpdate):
+    if data.time_start is None and data.time_end is None:
+        return None
+
+    if data.time_start is None:
+        time_start = lesson.time_start
+    else:
+        time_start = data.time_start
+
+    if data.time_end is None:
+        time_end = lesson.time_end
+    else:
+        time_end = data.time_end
+
+    if time_end <= time_start:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Время начала занятия должно быть раньше времени конца занятия.")
+
+    return
