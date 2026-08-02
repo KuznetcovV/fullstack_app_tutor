@@ -4,7 +4,7 @@ from app.models.lesson import Lesson
 from app.models.student import Student
 from app.schemas.lesson import LessonCreate, LessonUpdate
 from fastapi import HTTPException, status
-from datetime import date
+from app.core.time import today
 
 #Получение
 async def get_lessons_service(
@@ -20,14 +20,13 @@ async def get_lessons_service(
     result = await db.execute(query)
     return result.scalars().all()
 
-
 async def get_lesson_by_id_service(db: AsyncSession, lesson_id: int) -> Lesson | None:
     return await db.get(Lesson, lesson_id)
 
 
 async def get_today_lesson_service(db: AsyncSession) -> list[Lesson]:
-    today = date.today().weekday()
-    result = await db.execute(select(Lesson).where(Lesson.day == today))
+    today_weekday = today().weekday()
+    result = await db.execute(select(Lesson).where(Lesson.day == today_weekday))
     lessons = result.scalars().all()
     return lessons
 

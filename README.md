@@ -37,6 +37,9 @@ SECRET_KEY=сюда_случайную_длинную_строку
 ALGORITHM=HS256  
 ACCESS_TOKEN_EXPIRE_MINUTES=30  
 REFRESH_TOKEN_EXPIRE_DAYS=30  
+DEBUG=True  
+FRONTEND_URL=http://localhost:5173  
+TIMEZONE=Europe/Moscow  
 
 ## 4. Сгенерировать SECRET_KEY
 python -c "import secrets; print(secrets.token_hex(32))"  
@@ -71,6 +74,9 @@ http://localhost:8000/redoc
 Ключ для подписи JWT: SECRET_KEY  
 Время жизни Access Token в минутах: ACCESS_TOKEN_EXPIRE_MINUTES  
 Время жизни Refresh Token в днях: REFRESH_TOKEN_EXPIRE_MINUTES  
+Включает режим отладки приложения. В продакшене рекомендуется установить значение False: DEBUG  
+URL фронтенд-приложения, которому разрешён доступ к API через CORS: FRONTEND_URL
+Часовой пояс, используемый приложением при работе с датой и временем: TIMEZONE 
   
 ## Документация
 Полная документация находится в Confluence:  

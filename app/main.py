@@ -6,12 +6,13 @@ from app.routers.subscriptions import router as subscriptions_router
 from app.routers.lesson_logs import router as lesson_logs_router
 from app.routers.auth import router as auth_router
 from app.routers.users import router as users_router
+from app.core.config import FRONTEND_URL
 
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5173"
+        FRONTEND_URL
         ],
     allow_credentials=True,
     allow_methods=['*'],

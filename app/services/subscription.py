@@ -1,5 +1,4 @@
 from decimal import Decimal
-
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.schemas.subscription import SubscriptionCreate, SubscriptionUpdate
@@ -10,7 +9,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import or_
 from datetime import date, timedelta
 
-from app.dependencies.database import get_db
+from app.core.time import today
 
 
 
@@ -20,19 +19,19 @@ async def get_subscriptions_service(
         is_paid: bool | None,
         db: AsyncSession
         ) -> list[Subscription]:
-    today = date.today()
+    today_date = today()
     query = select(Subscription)
     if is_active is True:
         query = query.where(
-            Subscription.start_date <= today,
-            Subscription.end_date >= today
+            Subscription.start_date <= today_date,
+            Subscription.end_date >= today_date
             )
 
     elif is_active is False:
         query = query.where(
             or_(
-                Subscription.start_date > today,
-                Subscription.end_date < today
+                Subscription.start_date > today_date,
+                Subscription.end_date < today_date
             ))
 
     if is_paid is not None:

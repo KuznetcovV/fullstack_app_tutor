@@ -7,7 +7,7 @@ from app.models.subscription import Subscription
 from app.schemas.student import StudentCreate, StudentUpdate
 from sqlalchemy import func, or_
 from fastapi import HTTPException, status
-from datetime import date
+from app.core.time import today
 
 #Получение
 
@@ -64,15 +64,15 @@ async def get_lesson_logs_for_student_service(db: AsyncSession, student_id: int)
 
 
 async def get_active_subscription_for_student_service(db: AsyncSession, student_id: int) -> Subscription:
-    today = date.today()
+    today_date = today()
     student = await db.get(Student, student_id)
     if student is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ученик не найден")
     
     query = select(Subscription).where(
         Subscription.student_id == student_id,
-        Subscription.start_date <= today,
-        Subscription.end_date >= today)
+        Subscription.start_date <= today_date,
+        Subscription.end_date >= today_date)
     
     result = await db.execute(query)
     subscription = result.scalars().first()

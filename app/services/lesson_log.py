@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from app.schemas.lesson_log import LessonLogCreate, LessonLogResponse, LessonLogUpdate
+from app.schemas.lesson_log import LessonLogCreate, LessonLogUpdate
 from app.models.lesson_log import LessonLog
 from app.models.student import Student
 from app.models.lesson import Lesson
