@@ -1,4 +1,4 @@
-from fastapi import APIRouter, status, Depends, HTTPException, Response
+from fastapi import APIRouter, status, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.dependencies.database import get_db
 from app.services.lesson_log import create_lesson_log_service, delete_lesson_log_service, get_lesson_log_by_id_service, get_lesson_log_service, update_lesson_log_service
@@ -10,11 +10,13 @@ from app.dependencies.auth import get_current_user
 
 router = APIRouter(prefix="/lesson_logs", tags=["Записи о занятиях"], dependencies=[Depends(get_current_user)])
 
+#Получение
 @router.get("/",
             response_model=list[LessonLogResponse],
             status_code=status.HTTP_200_OK,
             summary="Получить все записи о занятиях")
 async def get_lesson_logs(db: AsyncSession = Depends(get_db)) -> list[LessonLogResponse]:
+
     return await get_lesson_log_service(db=db)
 
 @router.get("/{lesson_log_id}",
@@ -25,15 +27,11 @@ async def get_lesson_log_by_id(
     lesson_log_id: int,
     db: AsyncSession = Depends(get_db)
 ) -> LessonLogResponse | None:
+    
     lesson_log = await get_lesson_log_by_id_service(
         db=db,
         lesson_log_id=lesson_log_id
     )
-    if lesson_log is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Запись о занятии не найдена"
-        )
     
     return lesson_log
 
@@ -45,6 +43,7 @@ async def create_lesson_log(
     lesson_log: LessonLogCreate,
     db: AsyncSession = Depends(get_db)
 ) -> LessonLogResponse:
+
     return await create_lesson_log_service(db=db, lesson_log=lesson_log)
 
 @router.patch("/{lesson_log_id}",
@@ -56,17 +55,13 @@ async def update_lesson_log(
     data: LessonLogUpdate,
     db: AsyncSession = Depends(get_db)
 ) -> LessonLogResponse:
+    
     lesson_log = await update_lesson_log_service(
         db=db,
         lesson_log_id=lesson_log_id,
         data=data
     )
 
-    if lesson_log is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Запись о занятии не найдена"
-        )
     
     return lesson_log
 
@@ -77,14 +72,7 @@ async def remove_lesson_log(
     lesson_log_id: int,
     db: AsyncSession = Depends(get_db)
     ):
-    lesson_log = await delete_lesson_log_service(
+    await delete_lesson_log_service(
         lesson_log_id=lesson_log_id,
         db=db
         )
-    
-    if lesson_log is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Запись о занятии не найдена")
-    
-    return Response(status_code=status.HTTP_204_NO_CONTENT)

@@ -7,8 +7,17 @@ from app.routers.lesson_logs import router as lesson_logs_router
 from app.routers.auth import router as auth_router
 from app.routers.users import router as users_router
 from app.core.config import FRONTEND_URL
+from app.core.handlers import app_exception_handler
+from app.core.exceptions import AppException
+
 
 app = FastAPI()
+
+app.add_exception_handler(
+    AppException,
+    app_exception_handler
+)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[

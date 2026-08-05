@@ -1,12 +1,17 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.models.lesson import Lesson
-from app.models.student import Student
 from app.schemas.lesson import LessonCreate, LessonUpdate
-from fastapi import HTTPException, status
 from app.core.time import today
+from app.services.helpers.lessons import get_lesson_or_404
+from app.services.helpers.students import get_student_or_404
+from app.exceptions.lesson import (
+    LessonTimeIntersection,
+    InvalidLessonTimeInterval
+)
 
 #Получение
+#Получение уроков с возможным фильтром по дню недели
 async def get_lessons_service(
         day: int | None,
         db: AsyncSession
@@ -20,24 +25,23 @@ async def get_lessons_service(
     result = await db.execute(query)
     return result.scalars().all()
 
+#Получение урока по его id
 async def get_lesson_by_id_service(db: AsyncSession, lesson_id: int) -> Lesson | None:
-    return await db.get(Lesson, lesson_id)
+    return await get_lesson_or_404(db=db, lesson_id=lesson_id)
 
-
+#Получение сегодняшних уроков
 async def get_today_lesson_service(db: AsyncSession) -> list[Lesson]:
+
     today_weekday = today().weekday()
     result = await db.execute(select(Lesson).where(Lesson.day == today_weekday))
     lessons = result.scalars().all()
+    
     return lessons
 
 #Создание
 async def create_lesson_service(db: AsyncSession, lesson: LessonCreate) -> Lesson:
-    student = await db.get(Student, lesson.student_id)
 
-    if student is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Ученик не найден")
+    await get_student_or_404(db=db, student_id=lesson.student_id)
     
     await check_lessons_intersection(db=db, lesson=lesson)
 
@@ -55,18 +59,11 @@ async def update_lesson_service(db: AsyncSession,
                           data: LessonUpdate
                           ) -> Lesson | None:
     
-    lesson = await db.get(Lesson, lesson_id)
-
-    if lesson is None:
-        return None
+    lesson = await get_lesson_or_404(db=db, lesson_id=lesson_id)
 
     if data.student_id is not None:
-        student = await db.get(Student, data.student_id)
+        await get_student_or_404(db=db, student_id=data.student_id)
 
-        if student is None:
-            raise HTTPException(status_code=404,
-                                detail="Ученик не найден")
-    
     update_data = data.model_dump(exclude_unset=True)
 
     validate_lesson_time(lesson=lesson, data=data)
@@ -85,9 +82,7 @@ async def update_lesson_service(db: AsyncSession,
 #Удаление
 async def delete_lesson_service(db: AsyncSession,
                           lesson_id: int) -> Lesson | None:
-    lesson = await db.get(Lesson, lesson_id)
-    if lesson is None:
-        return None
+    lesson = await get_lesson_or_404(db=db, lesson_id=lesson_id)
     
     await db.delete(lesson)
     await db.commit()
@@ -107,8 +102,7 @@ async def check_lessons_intersection(db: AsyncSession, lesson: Lesson | LessonCr
     
     for existing in lessons:
         if lesson.time_start < existing.time_end and lesson.time_end > existing.time_start:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT,
-                                detail="Указанное время занятия пересекается с уже существующим")
+            raise LessonTimeIntersection()
 
 def validate_lesson_time(lesson: Lesson, data: LessonUpdate):
     if data.time_start is None and data.time_end is None:
@@ -125,6 +119,6 @@ def validate_lesson_time(lesson: Lesson, data: LessonUpdate):
         time_end = data.time_end
 
     if time_end <= time_start:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Время начала занятия должно быть раньше времени конца занятия.")
+        raise InvalidLessonTimeInterval()
 
     return

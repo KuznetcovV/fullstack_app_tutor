@@ -10,17 +10,27 @@ from sqlalchemy import or_
 from datetime import date, timedelta
 
 from app.core.time import today
+from app.services.helpers.subscriptions import get_subscription_or_404
+from app.services.helpers.students import get_student_or_404
 
-
+from app.exceptions.subscription import (
+    SubscriptionDatesIntersection,
+    ZeroLessonsForSubscriptionCreate,
+    InvalidDatesInetvalError
+)
 
 #Получение
+#Получение списка абонементов с возможными фильтрами активности и оплаты
 async def get_subscriptions_service(
         is_active: bool | None,
         is_paid: bool | None,
         db: AsyncSession
         ) -> list[Subscription]:
+    
     today_date = today()
+
     query = select(Subscription)
+
     if is_active is True:
         query = query.where(
             Subscription.start_date <= today_date,
@@ -44,8 +54,9 @@ async def get_subscriptions_service(
 
     return subscriptions
 
+#Получение абонемента по его id
 async def get_subscription_by_id_service(db: AsyncSession, subscription_id: int) -> Subscription | None:
-    return await db.get(Subscription, subscription_id)
+    return await get_subscription_or_404(db=db, subscription_id=subscription_id)
 
 
 #Создание
@@ -54,14 +65,8 @@ async def create_subscription_service(
     subscription: SubscriptionCreate
 ) -> Subscription:
 
-    student = await db.get(Student, subscription.student_id)
+    student = await get_student_or_404(db=db, student_id=subscription.student_id)
 
-    if student is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Ученик не найден"
-        )
-    
     await check_existing_lessons_for_subscription(db=db, student_id=student.id)
     await check_intersection_for_existing_subscriptions(db=db, subscription=subscription)
 
@@ -92,18 +97,11 @@ async def update_subscription_service(db: AsyncSession,
                                 subscription_id: int,
                                 data: SubscriptionUpdate
                                 ) -> Subscription | None:
-    subscription = await db.get(Subscription, subscription_id)
-
-    if subscription is None:
-        return None
+    subscription = await get_subscription_or_404(db=db, subscription_id=subscription_id)
     
     if data.student_id is not None:
-        student = await db.get(Student, data.student_id)
-        if student is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Ученик не найден")
-    
+        await get_student_or_404(db=db, student_id=data.student_id)
+
     validate_subscription_dates(subscription=subscription, data=data)
     
     updated_data = data.model_dump(exclude_unset=True)
@@ -145,9 +143,10 @@ async def update_subscription_service(db: AsyncSession,
 async def delete_subscription_service(
         subscription_id: int,
         db: AsyncSession) -> Subscription | None:
-    subscription = await db.get(Subscription, subscription_id)
-    if subscription is None:
-        return None
+    subscription = await get_subscription_or_404(
+        db=db,
+        subscription_id=subscription_id
+        )
     
     await db.delete(subscription)
     await db.commit()
@@ -196,8 +195,7 @@ async def check_existing_lessons_for_subscription(db: AsyncSession, student_id: 
     lesson_exists = result.scalars().first()
     
     if lesson_exists is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail="Для создания абонемента у ученика должны быть занятия в расписании")
+        raise ZeroLessonsForSubscriptionCreate()
     
 async def check_intersection_for_existing_subscriptions(db: AsyncSession, subscription: SubscriptionCreate | Subscription, exclude_id: int | None = None):
 
@@ -211,7 +209,7 @@ async def check_intersection_for_existing_subscriptions(db: AsyncSession, subscr
     
     for existing in existing_subscriptions:
         if subscription.start_date <= existing.end_date and subscription.end_date >= existing.start_date:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Пересечение дат с существующим абонементом для этого ученика")
+            raise SubscriptionDatesIntersection()
 
 def validate_subscription_dates(subscription: Subscription, data: SubscriptionUpdate):
     if data.start_date is not None and data.end_date is not None:
@@ -228,7 +226,7 @@ def validate_subscription_dates(subscription: Subscription, data: SubscriptionUp
         end_date = data.end_date
 
     if start_date >= end_date:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Дата начала должна быть меньше даты конца")
+        raise InvalidDatesInetvalError()
 
     return
 

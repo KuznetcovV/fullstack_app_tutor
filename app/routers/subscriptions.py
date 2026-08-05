@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Response, status, HTTPException
+from fastapi import APIRouter, Depends, status
 from app.services.subscription import create_subscription_service, delete_subscription_service, get_subscriptions_service, get_subscription_by_id_service, update_subscription_service
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.dependencies.database import get_db
@@ -14,6 +14,7 @@ router = APIRouter(prefix="/subscriptions", tags=["Абонементы"], depen
 async def get_subscriptions(is_active: bool | None = None,
                       is_paid: bool | None = None,
                       db: AsyncSession = Depends(get_db)) -> list[SubscriptionResponse]:
+    
     return await get_subscriptions_service(
         is_active=is_active,
         is_paid=is_paid,
@@ -31,10 +32,6 @@ async def get_subscription_by_id(
         db=db,
         subscription_id=subscription_id
         )
-    if subscription is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Абонемент не найден")
     
     return subscription
 
@@ -45,8 +42,8 @@ async def get_subscription_by_id(
 async def create_subscription(
     subscription: SubscriptionCreate,
     db: AsyncSession = Depends(get_db)) -> SubscriptionResponse:
-    return await create_subscription_service(db=db, subscription=subscription)
 
+    return await create_subscription_service(db=db, subscription=subscription)
 
 @router.patch("/{subscription_id}",
               response_model=SubscriptionResponse,
@@ -62,11 +59,6 @@ async def update_subscription(
         subscription_id=subscription_id,
         data=data)
     
-    if subscription is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Абонемент не найден")
-    
     return subscription
 
 @router.delete("/{subscription_id}",
@@ -76,14 +68,7 @@ async def remove_subscription(
     subscription_id: int,
     db: AsyncSession = Depends(get_db)
     ):
-    subscription = await  delete_subscription_service(
+    await  delete_subscription_service(
         subscription_id=subscription_id,
         db=db
         )
-    
-    if subscription is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Абонемент не найден")
-    
-    return Response(status_code=status.HTTP_204_NO_CONTENT)

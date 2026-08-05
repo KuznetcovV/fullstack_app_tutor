@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, Response, status
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.dependencies.database import get_db
 from app.schemas.student import StudentCreate, StudentResponse, StudentUpdate
@@ -20,10 +20,9 @@ from app.services.student import (
 from app.dependencies.auth import get_current_user
 
 
-
-
 router = APIRouter(prefix="/students", tags=["Ученики"], dependencies=[Depends(get_current_user)])
 
+#Получение
 @router.get("/", 
             response_model=list[StudentResponse],
             status_code=status.HTTP_200_OK,
@@ -35,7 +34,6 @@ async def get_students(
     ) -> list[StudentResponse]:
     return await get_students_service(db, number_of_class, is_active)
 
-
 @router.get("/search",
             response_model=list[StudentResponse],
             status_code=status.HTTP_200_OK,
@@ -46,16 +44,13 @@ async def search_students(
 ) -> list[StudentResponse]:
     return await search_students_service(query=query, db=db)
 
-
 @router.get("/{student_id}",
             response_model=StudentResponse,
             status_code=status.HTTP_200_OK,
             summary="Получить конкретного ученика")
 async def get_student_by_id(student_id: int, db: AsyncSession = Depends(get_db)) -> StudentResponse:
-    student = await get_student_by_id_service(db, student_id)
 
-    if student is None:
-        raise HTTPException(status_code=404, detail="Ученик не найден")
+    student = await get_student_by_id_service(db, student_id)
     
     return student
 
@@ -67,7 +62,9 @@ async def get_lesson_logs_for_student(
     student_id: int,
     db: AsyncSession = Depends(get_db)
     ) -> list[LessonLogResponse]:
+
     lesson_logs = await get_lesson_logs_for_student_service(db=db, student_id=student_id)
+
     return lesson_logs
 
 @router.get("/{student_id}/lessons",
@@ -78,7 +75,9 @@ async def get_lessons_for_student(
     student_id: int,
     db: AsyncSession = Depends(get_db)
     ) -> list[LessonResponse]:
+
     lessons = await get_lessons_for_student_service(db=db, student_id=student_id)
+
     return lessons
 
 @router.get("/{student_id}/subscriptions",
@@ -89,10 +88,12 @@ async def get_subscriptions_for_student(
     student_id: int,
     db: AsyncSession = Depends(get_db)
 ) -> list[SubscriptionResponse]:
+    
     subscriptions = await get_subscriptions_for_student_service(
         db=db,
         student_id=student_id
     )
+
     return subscriptions
 
 @router.get("/{student_id}/current-subscription",
@@ -103,20 +104,24 @@ async def get_active_subscription_for_student(
     student_id: int,
     db: AsyncSession = Depends(get_db)
 ) -> SubscriptionResponse:
+    
     subscription = await get_active_subscription_for_student_service(
         student_id=student_id, db=db
     )
+
     return subscription
 
+#Создание
 @router.post("/", 
             summary="Добавление ученика",
             status_code=status.HTTP_201_CREATED,
             response_model=StudentResponse)
 async def create_student(data: StudentCreate,
                    db: AsyncSession = Depends(get_db)):
+    
     return await create_student_service(db=db, data=data)
 
-
+#Обновление
 @router.patch("/{student_id}",
               summary="Обновление данных ученика",
               status_code=status.HTTP_200_OK,
@@ -127,26 +132,13 @@ async def update_student(student_id: int,
                    ):
     
     student = await update_student_service(db, student_id, data)
-
-    if student is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Ученик не найден"
-            )
     
     return student
 
-
+#Удаление
 @router.delete("/{student_id}",
                status_code=status.HTTP_204_NO_CONTENT,
                summary="Удаление ученика")
 async def remove_student(student_id: int, db: AsyncSession = Depends(get_db)):
-    student = await delete_student_service(db, student_id)
 
-    if student is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Ученик не найден"
-            )
-    
-    return Response(status_code=204)
+    await delete_student_service(db, student_id)
