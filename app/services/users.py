@@ -2,7 +2,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.models.user import User, UserRole
 from fastapi import HTTPException, status
+from app.services.helpers.user import get_user_or_404
 
+
+#Получение
+#Получение списка пользователей с опциональными параметрами
 async def get_users_service(
         db: AsyncSession,
         login: str | None = None,
@@ -25,17 +29,22 @@ async def get_users_service(
 
     return users
 
+#Получение пользователя по Id
 async def get_user_by_id_service(
         db: AsyncSession,
         user_id: int
-)-> User | None:
-    return await db.get(User, user_id)
+)-> User:
+    user = await get_user_or_404(db=db, user_id=user_id)
+    return user
 
+#Удаление пользователя по его Id
 async def delete_user_by_id_service(
         db: AsyncSession,
         user_id: int,
         current_user: User
-) -> User | None:
+) -> User:
+
+    user = await get_user_or_404(db=db, user_id=user_id)
     
     if current_user.id == user_id:
         raise HTTPException(
@@ -43,12 +52,7 @@ async def delete_user_by_id_service(
             detail="Нельзя удалить самого себя"
         )
 
-    user = await db.get(User, user_id)
-
-    if user is None:
-        return None
-
-    db.delete(user)
+    await db.delete(user)
     await db.commit()
 
     return user

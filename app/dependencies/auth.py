@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies.database import get_db
 from app.core.security import verify_access_token
-from app.models.user import User
+from app.models.user import User, UserRole
 
 from fastapi.security import HTTPBearer
 
@@ -46,3 +46,14 @@ async def get_current_user(
         )
 
     return user
+
+async def get_current_admin(
+        current_user: User = Depends(get_current_user)
+) -> User:
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Недостаточно прав"
+        )
+
+    return current_user

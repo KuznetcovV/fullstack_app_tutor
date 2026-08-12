@@ -89,8 +89,8 @@ async def delete_lesson_service(db: AsyncSession,
 
     return lesson
 
-
 #Вспомогательные функции
+#Проверка пересечения нового занятия с имкеющимися в указанный день
 async def check_lessons_intersection(db: AsyncSession, lesson: Lesson | LessonCreate, exclude_id: int | None = None):
     query = select(Lesson).where(Lesson.day == lesson.day)
 
@@ -104,6 +104,7 @@ async def check_lessons_intersection(db: AsyncSession, lesson: Lesson | LessonCr
         if lesson.time_start < existing.time_end and lesson.time_end > existing.time_start:
             raise LessonTimeIntersection()
 
+#Проверка обновленного времени занятия
 def validate_lesson_time(lesson: Lesson, data: LessonUpdate):
     if data.time_start is None and data.time_end is None:
         return None

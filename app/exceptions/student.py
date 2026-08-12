@@ -4,7 +4,6 @@ class StudentNotFound(AppException):
     status_code = 404
     detail = "Ученик не найден."
 
-
 class StudentAlreadyExists(AppException):
     status_code = 409
     detail = "Такой ученик уже существует."

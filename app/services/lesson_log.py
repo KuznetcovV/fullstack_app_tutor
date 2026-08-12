@@ -101,4 +101,3 @@ async def check_student_lesson_link(db: AsyncSession, lesson_id: int, student_id
 
     if lesson.student_id != student_id:
         raise StudentLessonMismatch()
-

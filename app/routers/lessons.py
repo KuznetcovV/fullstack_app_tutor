@@ -13,6 +13,7 @@ from app.dependencies.auth import get_current_user
 
 router = APIRouter(prefix="/lessons", tags=["Занятия"], dependencies=[Depends(get_current_user)])
 
+#Получение всех занятий
 @router.get("/",
             response_model=list[LessonResponse],
             status_code=status.HTTP_200_OK,
@@ -23,6 +24,7 @@ async def get_lessons(
 
     return await get_lessons_service(day=day, db=db)
 
+#Получение сегодняшних занятий
 @router.get("/today",
             response_model=list[LessonResponse],
             status_code=status.HTTP_200_OK,
@@ -33,6 +35,7 @@ async def get_today_lessons(
     
     return await get_today_lesson_service(db=db)
 
+#Получение занятия по его id
 @router.get("/{lesson_id}",
             response_model=LessonResponse,
             status_code=status.HTTP_200_OK,
@@ -43,6 +46,7 @@ async def get_lesson_by_id(lesson_id:int, db: AsyncSession = Depends(get_db)) ->
     
     return lesson
 
+#Создание занятия
 @router.post("/",
             response_model=LessonResponse,
             status_code=status.HTTP_201_CREATED,
@@ -54,7 +58,7 @@ async def create_lesson(
     
     return await create_lesson_service(db, lesson)
 
-
+#Обновление занятия по его Id
 @router.patch("/{lesson_id}",
               response_model=LessonResponse,
               status_code=status.HTTP_200_OK,
@@ -71,6 +75,7 @@ async def update_lesson(
     
     return lesson
 
+#Удаление занятия по его id
 @router.delete("/{lesson_id}",
                status_code=status.HTTP_204_NO_CONTENT,
                summary="Удаление занятия")

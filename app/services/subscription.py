@@ -58,7 +58,6 @@ async def get_subscriptions_service(
 async def get_subscription_by_id_service(db: AsyncSession, subscription_id: int) -> Subscription | None:
     return await get_subscription_or_404(db=db, subscription_id=subscription_id)
 
-
 #Создание
 async def create_subscription_service(
     db: AsyncSession,
@@ -90,7 +89,6 @@ async def create_subscription_service(
     await db.refresh(db_subscription)
 
     return db_subscription
-
 
 #Обновление
 async def update_subscription_service(db: AsyncSession,
@@ -138,7 +136,6 @@ async def update_subscription_service(db: AsyncSession,
 
     return subscription
 
-
 #Удаление
 async def delete_subscription_service(
         subscription_id: int,
@@ -153,7 +150,8 @@ async def delete_subscription_service(
 
     return subscription
 
-#вспомогательные функции
+#Вспомогательные функции
+#Подсчет кол-ва занятий и итоговой стоимости абонемента
 async def calculate_subscription(
         db: AsyncSession,
         student_id: int,
@@ -189,6 +187,7 @@ async def calculate_subscription(
 
     return count_lessons, total_price
 
+#Проверка существования занятий для создания абонемента
 async def check_existing_lessons_for_subscription(db: AsyncSession, student_id: int):
     query = select(Lesson).where(Lesson.student_id == student_id)
     result = await db.execute(query)
@@ -196,7 +195,8 @@ async def check_existing_lessons_for_subscription(db: AsyncSession, student_id: 
     
     if lesson_exists is None:
         raise ZeroLessonsForSubscriptionCreate()
-    
+
+#Проверка пересечения дат имеющихся абонементов с созданным
 async def check_intersection_for_existing_subscriptions(db: AsyncSession, subscription: SubscriptionCreate | Subscription, exclude_id: int | None = None):
 
     query = select(Subscription).where(Subscription.student_id == subscription.student_id)
@@ -211,6 +211,7 @@ async def check_intersection_for_existing_subscriptions(db: AsyncSession, subscr
         if subscription.start_date <= existing.end_date and subscription.end_date >= existing.start_date:
             raise SubscriptionDatesIntersection()
 
+#Проверка обновленных дат абонемента
 def validate_subscription_dates(subscription: Subscription, data: SubscriptionUpdate):
     if data.start_date is not None and data.end_date is not None:
         return

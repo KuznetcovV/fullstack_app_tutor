@@ -124,7 +124,6 @@ async def get_subscriptions_for_student_service(db: AsyncSession, student_id: in
 
     return subscriptions
 
-
 #Создание
 #Создание ученика
 async def create_student_service(db: AsyncSession, data: StudentCreate) -> Student:
@@ -173,7 +172,6 @@ async def update_student_service(db: AsyncSession,
     await db.refresh(student)
 
     return student
-
 
 #Удаление
 #Удаление записи ученика

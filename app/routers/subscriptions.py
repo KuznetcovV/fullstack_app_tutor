@@ -7,6 +7,7 @@ from app.dependencies.auth import get_current_user
 
 router = APIRouter(prefix="/subscriptions", tags=["Абонементы"], dependencies=[Depends(get_current_user)])
 
+#Получение абонементов с возможными фильтрами по оплате и/или активности
 @router.get("/",
             response_model=list[SubscriptionResponse],
             status_code=status.HTTP_200_OK,
@@ -20,6 +21,7 @@ async def get_subscriptions(is_active: bool | None = None,
         is_paid=is_paid,
         db=db)
 
+#Получение абонемента по его Id
 @router.get("/{subscription_id}",
             response_model=SubscriptionResponse,
             status_code=status.HTTP_200_OK,
@@ -35,6 +37,7 @@ async def get_subscription_by_id(
     
     return subscription
 
+#Создание абонемента
 @router.post("/",
             response_model=SubscriptionResponse,
             status_code=status.HTTP_201_CREATED,
@@ -45,6 +48,7 @@ async def create_subscription(
 
     return await create_subscription_service(db=db, subscription=subscription)
 
+#Обновление абонемента по его Id
 @router.patch("/{subscription_id}",
               response_model=SubscriptionResponse,
               status_code=status.HTTP_200_OK,
@@ -61,6 +65,7 @@ async def update_subscription(
     
     return subscription
 
+#Удаление абонемента по его Id
 @router.delete("/{subscription_id}",
                status_code=status.HTTP_204_NO_CONTENT,
                summary="Удаление абонемента")

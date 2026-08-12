@@ -11,6 +11,7 @@ from app.dependencies.auth import get_current_user
 router = APIRouter(prefix="/lesson_logs", tags=["Записи о занятиях"], dependencies=[Depends(get_current_user)])
 
 #Получение
+#Получение всех записей о занятиях
 @router.get("/",
             response_model=list[LessonLogResponse],
             status_code=status.HTTP_200_OK,
@@ -19,6 +20,7 @@ async def get_lesson_logs(db: AsyncSession = Depends(get_db)) -> list[LessonLogR
 
     return await get_lesson_log_service(db=db)
 
+#Получение лога занятия по его Id
 @router.get("/{lesson_log_id}",
             response_model=LessonLogResponse,
             status_code=status.HTTP_200_OK,
@@ -35,6 +37,7 @@ async def get_lesson_log_by_id(
     
     return lesson_log
 
+#Создание лога
 @router.post("/",
             response_model=LessonLogResponse,
             status_code=status.HTTP_201_CREATED,
@@ -46,6 +49,7 @@ async def create_lesson_log(
 
     return await create_lesson_log_service(db=db, lesson_log=lesson_log)
 
+#Обновление лога по его id
 @router.patch("/{lesson_log_id}",
               response_model=LessonLogResponse,
               status_code=status.HTTP_200_OK,
@@ -65,6 +69,7 @@ async def update_lesson_log(
     
     return lesson_log
 
+#Удаление лога по его id
 @router.delete("/{lesson_log_id}",
                status_code=status.HTTP_204_NO_CONTENT,
                summary="Удаление записи о занятии")

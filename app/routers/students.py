@@ -23,6 +23,7 @@ from app.dependencies.auth import get_current_user
 router = APIRouter(prefix="/students", tags=["Ученики"], dependencies=[Depends(get_current_user)])
 
 #Получение
+#Получение списка учеников с возможными фильтрами по классу и активности
 @router.get("/", 
             response_model=list[StudentResponse],
             status_code=status.HTTP_200_OK,
@@ -34,6 +35,7 @@ async def get_students(
     ) -> list[StudentResponse]:
     return await get_students_service(db, number_of_class, is_active)
 
+#Поиск ученика по имени/фамилии/полному имени
 @router.get("/search",
             response_model=list[StudentResponse],
             status_code=status.HTTP_200_OK,
@@ -44,6 +46,7 @@ async def search_students(
 ) -> list[StudentResponse]:
     return await search_students_service(query=query, db=db)
 
+#Получение ученика по его Id
 @router.get("/{student_id}",
             response_model=StudentResponse,
             status_code=status.HTTP_200_OK,
@@ -54,6 +57,7 @@ async def get_student_by_id(student_id: int, db: AsyncSession = Depends(get_db))
     
     return student
 
+#Получение всех логов ученика
 @router.get("/{student_id}/lesson-logs",
             response_model=list[LessonLogResponse],
             status_code=status.HTTP_200_OK,
@@ -67,6 +71,7 @@ async def get_lesson_logs_for_student(
 
     return lesson_logs
 
+#Получение всех занятий ученика
 @router.get("/{student_id}/lessons",
             response_model=list[LessonResponse],
             status_code=status.HTTP_200_OK,
@@ -80,6 +85,7 @@ async def get_lessons_for_student(
 
     return lessons
 
+#Получение всех абонементов ученика
 @router.get("/{student_id}/subscriptions",
             response_model=list[SubscriptionResponse],
             status_code=status.HTTP_200_OK,
@@ -96,6 +102,7 @@ async def get_subscriptions_for_student(
 
     return subscriptions
 
+#Получение текущего-активного абонемента ученика
 @router.get("/{student_id}/current-subscription",
             response_model=SubscriptionResponse,
             status_code=status.HTTP_200_OK,
@@ -111,7 +118,7 @@ async def get_active_subscription_for_student(
 
     return subscription
 
-#Создание
+#Создание ученика
 @router.post("/", 
             summary="Добавление ученика",
             status_code=status.HTTP_201_CREATED,
@@ -121,7 +128,7 @@ async def create_student(data: StudentCreate,
     
     return await create_student_service(db=db, data=data)
 
-#Обновление
+#Обновление ученика
 @router.patch("/{student_id}",
               summary="Обновление данных ученика",
               status_code=status.HTTP_200_OK,
@@ -135,7 +142,7 @@ async def update_student(student_id: int,
     
     return student
 
-#Удаление
+#Удаление ученика
 @router.delete("/{student_id}",
                status_code=status.HTTP_204_NO_CONTENT,
                summary="Удаление ученика")
