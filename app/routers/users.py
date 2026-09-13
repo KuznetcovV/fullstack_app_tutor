@@ -36,9 +36,7 @@ async def get_user_by_id(user_id: int, db: AsyncSession = Depends(get_db)) -> Us
 
 #удаление пользователя по его Id
 @router.delete("/{user_id}",
-               status_code=status.HTTP_200_OK,
+               status_code=status.HTTP_204_NO_CONTENT,
                summary="Удаление пользователя по id")
 async def delete_user_by_id(user_id: int, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
-    user = await delete_user_by_id_service(db, user_id, current_user)
-
-    return user
+    await delete_user_by_id_service(db, user_id, current_user)

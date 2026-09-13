@@ -8,7 +8,6 @@ from app.models.user import User
 
 
 
-
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 @router.post("/register", response_model=TokenResponse)

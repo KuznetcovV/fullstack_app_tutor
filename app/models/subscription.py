@@ -4,6 +4,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 from app.models.mixins import TimestampMixin
 from decimal import Decimal
+from app.core.time import today
 
 class Subscription(TimestampMixin, Base):
     __tablename__ = "subscriptions"
@@ -29,8 +30,4 @@ class Subscription(TimestampMixin, Base):
 
     @property
     def is_active(self):
-        return self.start_date <= date.today() <= self.end_date
-    
-    @property
-    def full_cost(self):
-        return self.planned_lessons * self.price_for_one_lesson
+        return self.start_date <= today() <= self.end_date
