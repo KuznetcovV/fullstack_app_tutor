@@ -16,7 +16,7 @@ from app.main import app
 from app.core.config import TEST_DATABASE_URL
 from app.dependencies.database import get_db
 
-#фикстура для накатывания всех миграций до последней
+#фикстура для накатывания всех миграций до последней на тестовую бд
 @pytest.fixture(scope="session", autouse=True)
 def aply_migrations():
     cfg = Config("alembic-test.ini")
@@ -55,7 +55,68 @@ async def authorized_client(client):
         "login": "test_user",
         "password": "strongpassword123",
     })
+    assert response.status_code == 200, f"Не удалось зарегистрировать юзера для фикстуры: {response.text}"
 
-    client.headers["Authorization"] = f"Bearer {response.json()['access_token']}"
-
+    client.headers["Authorization"] = f"Bearer {response.json()["access_token"]}"
     return client
+
+#создание студента
+@pytest_asyncio.fixture
+async def created_solo_student(authorized_client):
+    response = await authorized_client.post("/students/", json={
+        "first_name": "Тестовый",
+        "last_name": "Студент",
+        "number_of_class": 5,
+        "phone": "+79990000000",
+        "parent_name": "Родитель",
+        "parent_phone": "+79990000001",
+        "notes": "Тестовые заметки",
+        "is_active": True
+    })
+    assert response.status_code == 201, f"Не удалось создать студента для фикстуры: {response.text}"
+    return response.json()
+
+@pytest_asyncio.fixture
+async def created_many_students(authorized_client):
+    first_sutdent = await authorized_client.post("/students/", json={
+        "first_name": "Иван",
+        "last_name": "Петров",
+        "number_of_class": 9,
+        "phone": "+79969133520",
+        "parent_name": "Алексей Петров",
+        "parent_phone": "89992223344",
+        "notes": "Хорошо понимает дроби",
+        "is_active": True
+    })
+
+    assert first_sutdent.status_code == 201, f"Не удалось создать студента для фикстуры: {first_sutdent.text}"
+    
+    second_student = await authorized_client.post("/students/", json={
+        "first_name": "Мария",
+        "last_name": "Сидорова",
+        "number_of_class": 10,
+        "phone": "89912312312",
+        "parent_name": "Елена Сидорова",
+        "parent_phone": "89992223344",
+        "notes": None,
+        "is_active": True
+    })
+
+    assert second_student.status_code == 201, f"Не удалось создать студента для фикстуры: {second_student.text}"
+
+    third_student = await authorized_client.post("/students/", json={
+        "first_name": "Дмитрий",
+        "last_name": "Иванов",
+        "number_of_class": 10,
+        "phone": None,
+        "parent_name": None,
+        "parent_phone": None,
+        "notes": "Подготовка к ЕГЭ",
+        "is_active": False
+    })
+
+    assert third_student.status_code == 201, f"Не удалось создать студента для фикстуры: {third_student.text}"
+
+    result_list = [first_sutdent.json(), second_student.json(), third_student.json()]
+
+    return result_list
