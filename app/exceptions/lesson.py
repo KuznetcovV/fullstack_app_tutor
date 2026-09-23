@@ -13,5 +13,5 @@ class LessonTimeIntersection(AppException):
     detail = "Указанное время занятия пересекается с уже существующим."
 
 class InvalidLessonTimeInterval(AppException):
-    status_code = 409
+    status_code = 422
     detail = "Время начала занятия должно быть раньше времени конца занятия."

@@ -120,3 +120,76 @@ async def created_many_students(authorized_client):
     result_list = [first_sutdent.json(), second_student.json(), third_student.json()]
 
     return result_list
+
+@pytest_asyncio.fixture
+async def created_solo_student_and_lesson(created_solo_student, authorized_client):
+    response = await authorized_client.post("/lessons/", json={
+        "student_id": created_solo_student["id"],
+        "day": 1,
+        "time_start": "12:00:00",
+        "time_end": "13:00:00"
+    })
+    assert response.status_code == 201, f"Не удалось создать занятие для фикстуры: {response.text}"
+    return response.json()
+
+@pytest_asyncio.fixture
+async def created_solo_student_and_many_lessons(created_solo_student, authorized_client):
+    first_lesson = await authorized_client.post("/lessons/", json={
+        "student_id": created_solo_student["id"],
+        "day": 1,
+        "time_start": "12:00:00",
+        "time_end": "13:00:00"
+    })
+    assert first_lesson.status_code == 201, f"Не удалось создать занятие для фикстуры: {first_lesson.text}"
+
+    second_lesson = await authorized_client.post("/lessons/", json={
+        "student_id": created_solo_student["id"],
+        "day": 3,
+        "time_start": "12:00:00",
+        "time_end": "13:00:00"
+    })
+
+    assert second_lesson.status_code == 201, f"Не удалось создать занятие для фикстуры: {second_lesson.text}"
+
+    third_lesson = await authorized_client.post("/lessons/", json={
+        "student_id": created_solo_student["id"],
+        "day": 5,
+        "time_start": "12:00:00",
+        "time_end": "13:00:00"
+    })
+
+    assert third_lesson.status_code == 201, f"Не удалось создать занятие для фикстуры: {third_lesson.text}"
+
+    return [first_lesson.json(), second_lesson.json(), third_lesson.json()]
+
+LESSON_DAYS = [1, 3, 5]
+STUDENT_TIME_SLOTS = [
+    ("12:00:00", "13:00:00"),
+    ("13:00:00", "14:00:00"),
+    ("14:00:00", "15:00:00"),
+]
+
+@pytest_asyncio.fixture
+async def created_many_students_many_lessons(created_many_students, authorized_client):
+
+    students_lessons = {}
+
+    for student, (time_start, time_end) in zip(created_many_students, STUDENT_TIME_SLOTS):
+        lessons = []
+
+        for day in LESSON_DAYS:
+            response = await authorized_client.post("/lessons/", json={
+                "student_id": student["id"],
+                "day": day,
+                "time_start": time_start,
+                "time_end": time_end
+            })
+            assert response.status_code == 201, (
+                f"Не удалось создать занятие для фикстуры "
+                f"(student_id={student['id']}, day={day}): {response.text}"
+            )
+            lessons.append(response.json())
+
+        students_lessons[student["id"]] = lessons
+
+    return students_lessons

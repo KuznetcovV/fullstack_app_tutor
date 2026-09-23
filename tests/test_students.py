@@ -88,7 +88,7 @@ async def test_create_student_with_empty_required_vals(first_name,
     assert response.status_code == 422, response.text
 
 #Проверка корректного обновления
-async def test_update_student_correct_vals(created_solo_student, authorized_client):
+async def test_update_student_with_valid_data_returns_200(created_solo_student, authorized_client):
 
     id = created_solo_student["id"]
 
@@ -111,7 +111,7 @@ async def test_update_student_correct_vals(created_solo_student, authorized_clie
     assert updated_body["is_active"] is updated_user["is_active"]
 
 #Проверка корректного удаления
-async def test_correct_delete_student(created_solo_student, authorized_client):
+async def test_delete_student_returns_204(created_solo_student, authorized_client):
     student_id = created_solo_student["id"]
 
     delete_response = await authorized_client.delete(f"/students/{student_id}")
@@ -138,7 +138,7 @@ async def test_delete_student_with_empty_id_hits_collection_route(authorized_cli
     assert delete_response.status_code == 405, delete_response.text
 
 #Проверка получения ученика по его id
-async def test_create_and_get_student(created_solo_student, authorized_client):
+async def test_get_student_by_id_returns_200(created_solo_student, authorized_client):
     student_id = created_solo_student["id"]
 
     get_response = await authorized_client.get(f"/students/{student_id}")
@@ -182,6 +182,7 @@ async def test_get_students_with_number_of_class_and_active(created_many_student
     assert len(body) == 1
     assert all(el["is_active"] and el["number_of_class"] == 10 for el in body)
 
+#Поиск по совпадению в имени
 async def test_search_students_by_first_name(created_many_students, authorized_client):
     response = await authorized_client.get("/students/search", params={"query": "Дми"})
     assert response.status_code == 200
@@ -189,6 +190,7 @@ async def test_search_students_by_first_name(created_many_students, authorized_c
     assert len(body) == 1
     assert all("Дми" in el["first_name"] for el in body)
 
+#Поиск по совпадению в фамилии
 async def test_search_students_by_last_name(created_many_students, authorized_client):
     response = await authorized_client.get("/students/search", params={"query": "Ивано"})
     assert response.status_code == 200
@@ -196,6 +198,7 @@ async def test_search_students_by_last_name(created_many_students, authorized_cl
     assert len(body) == 1
     assert all("Ивано" in el["last_name"] for el in body)
 
+#Поиск по полному имени (имя + фамилия через пробел)
 async def test_search_by_full_name(created_many_students, authorized_client):
     response = await authorized_client.get("/students/search", params={"query": "Дмитрий Иванов"})
     assert response.status_code == 200
@@ -203,7 +206,8 @@ async def test_search_by_full_name(created_many_students, authorized_client):
     assert len(body) == 1
     assert all("Дмитрий" in el["first_name"] and "Иванов" in el["last_name"] for el in body)
 
-async def test_search_ignore_register(created_many_students, authorized_client):
+#Регистронезависимый поиск 
+async def test_search_case_insensitive(created_many_students, authorized_client):
     response = await authorized_client.get("/students/search", params={"query": "дмитрий"})
     assert response.status_code == 200
     body = response.json()
@@ -222,6 +226,7 @@ async def test_search_ignore_register(created_many_students, authorized_client):
     assert len(body) == 1
     assert all("Дмитрий" in el["first_name"] and "Иванов" in el["last_name"] for el in body)
 
+#Частичное совпадение в середине слова, не только с начала
 async def test_search_in_middle(created_many_students, authorized_client):
     response = await authorized_client.get("/students/search", params={"query": "итрий"})
     assert response.status_code == 200
@@ -229,23 +234,27 @@ async def test_search_in_middle(created_many_students, authorized_client):
     assert len(body) == 1
     assert all("Дмитрий" in el["first_name"] for el in body)
 
-async def test_not_match_query(created_many_students, authorized_client):
+#Запрос, под который никто не подходит -> пустой список
+async def test_search_no_matches_returns_empty_list(created_many_students, authorized_client):
     response = await authorized_client.get("/students/search", params={"query": "Стас"})
     assert response.status_code == 200
     body = response.json()
     assert len(body) == 0
 
-async def test_search_without_query(authorized_client):
+#Поиск без параметра query вообще -> 422
+async def test_search_without_query_param_returns_422(authorized_client):
     response = await authorized_client.get("/students/search")
     assert response.status_code == 422
 
-async def test_search_empty_query(created_many_students, authorized_client):
+#Пустая строка в query -> возвращает всех, а не 422 и не пустой список
+async def test_search_with_empty_query_returns_all(created_many_students, authorized_client):
     response = await authorized_client.get("/students/search", params={"query": ""})
     assert response.status_code == 200
     body = response.json()
     assert len(body) == 3
 
-async def test_search_non_authorized_client(client):
+#Поиск без авторизации -> 401
+async def test_search_without_auth_returns_401(client):
     response = await client.get("/students/search", params={"query": ""})
     assert response.status_code == 401
 
@@ -262,7 +271,7 @@ async def test_create_student_with_empty_string_name(first_name, last_name, auth
 
     assert response.status_code == 422, response.text
 
-#Проверка превышения максимальной длины имени/фамилии/комментария
+#Проверка превышения максимальной длины имени (>100 символов) -> 422
 async def test_create_student_with_too_long_first_name(authorized_client):
     user = DEFAULT_USER.copy()
     user["first_name"] = "А" * 101
@@ -270,6 +279,7 @@ async def test_create_student_with_too_long_first_name(authorized_client):
 
     assert response.status_code == 422, response.text
 
+#Превышение максимальной длины фамилии (>100 символов) -> 422
 async def test_create_student_with_too_long_last_name(authorized_client):
     user = DEFAULT_USER.copy()
     user["last_name"] = "Б" * 101
@@ -277,6 +287,7 @@ async def test_create_student_with_too_long_last_name(authorized_client):
 
     assert response.status_code == 422, response.text
 
+#Превышение максимальной длины комментария (>1000 символов) -> 422
 async def test_create_student_with_too_long_notes(authorized_client):
     user = DEFAULT_USER.copy()
     user["notes"] = "текст " * 1000
