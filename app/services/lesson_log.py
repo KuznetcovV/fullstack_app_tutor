@@ -44,9 +44,8 @@ async def create_lesson_log_service(
     
     if lesson_log.lesson_id is not None:
         await get_lesson_or_404(db=db, lesson_id=lesson_log.lesson_id)
-
-    #Проверка, принадлежит ли указанное занятие указанному ученику
-    await check_student_lesson_link(db=db, lesson_id=lesson_log.lesson_id, student_id=lesson_log.student_id)
+        #Проверка, принадлежит ли указанное занятие указанному ученику
+        await check_student_lesson_link(db=db, lesson_id=lesson_log.lesson_id, student_id=lesson_log.student_id)
 
     db_lesson_log = LessonLog(**lesson_log.model_dump())
 
@@ -66,11 +65,12 @@ async def update_lesson_log_service(db: AsyncSession, lesson_log_id: int, data: 
     if data.lesson_id is not None:
         await get_lesson_or_404(db=db, lesson_id=data.lesson_id)
         
-    lesson_id = data.lesson_id or lesson_log.lesson_id
-    student_id = data.student_id or lesson_log.student_id
+    lesson_id = data.lesson_id if "lesson_id" in data.model_fields_set else lesson_log.lesson_id
+    student_id = data.student_id if "student_id" in data.model_fields_set else lesson_log.student_id
 
-    #Проверка, принадлежит ли указанное занятие указанному ученику
-    await check_student_lesson_link(db=db, lesson_id=lesson_id, student_id=student_id)
+    if lesson_id is not None:
+        #Проверка, принадлежит ли указанное занятие указанному ученику
+        await check_student_lesson_link(db=db, lesson_id=lesson_id, student_id=student_id)
 
     updated_data = data.model_dump(exclude_unset=True)
 

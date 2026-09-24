@@ -12,14 +12,22 @@ class LessonLogCreate(BaseSchema):
     grade: int | None = None
     comment: str | None = None
 
-    @field_validator("topic", "textbook", "comment")
+    @field_validator("topic", "comment")
     @classmethod
     def validate_text_fields(cls, value):
         if value is None:
             return value
-        
         if len(value) > 1000:
             raise ValueError("Длина поля не должна превышать 1000 символов")
+        return value
+
+    @field_validator("textbook")
+    @classmethod
+    def validate_textbook(cls, value):
+        if value is None:
+            return value
+        if len(value) > 255:
+            raise ValueError("Длина поля не должна превышать 255 символов")
         return value
         
     @field_validator("grade")
@@ -58,14 +66,22 @@ class LessonLogUpdate(BaseSchema):
     grade: int | None = None
     comment: str | None = None
 
-    @field_validator("topic", "textbook", "comment")
+    @field_validator("topic", "comment")
     @classmethod
     def validate_text_fields(cls, value):
         if value is None:
             return value
-        
         if len(value) > 1000:
             raise ValueError("Длина поля не должна превышать 1000 символов")
+        return value
+
+    @field_validator("textbook")
+    @classmethod
+    def validate_textbook(cls, value):
+        if value is None:
+            return value
+        if len(value) > 255:
+            raise ValueError("Длина поля не должна превышать 255 символов")
         return value
         
     @field_validator("grade")
