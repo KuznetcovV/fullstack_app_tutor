@@ -193,3 +193,13 @@ async def created_many_students_many_lessons(created_many_students, authorized_c
         students_lessons[student["id"]] = lessons
 
     return students_lessons
+
+@pytest_asyncio.fixture
+async def created_solo_student_and_lesson_log(created_solo_student, authorized_client):
+    response = await authorized_client.post("/lesson_logs/", json={
+        "student_id": created_solo_student["id"],
+        "lesson_log_date": "2026-09-22"
+    })
+
+    assert response.status_code == 201, f"Не удалось создать лог занятия для фикстуры: {response.text}"
+    return response.json()
