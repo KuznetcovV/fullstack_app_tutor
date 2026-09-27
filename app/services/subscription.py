@@ -101,7 +101,6 @@ async def update_subscription_service(db: AsyncSession,
         await get_student_or_404(db=db, student_id=data.student_id)
         await check_existing_lessons_for_subscription(db=db, student_id=data.student_id)
 
-    
 
     validate_subscription_dates(subscription=subscription, data=data)
     
