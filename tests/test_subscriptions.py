@@ -444,3 +444,29 @@ async def test_get_subscriptions_empty_returns_200(created_solo_student, authori
 async def test_get_subscriptions_without_auth_returns_401(client):
     response = await client.get("/subscriptions/")
     assert response.status_code == 401
+
+# ─── Получение по id — GET /subscriptions/{id} ───
+
+# Успешное получение → 200
+async def test_get_subscription_by_id_returns_200(created_solo_student_many_lessons_and_subscription, authorized_client):
+    sub_id = created_solo_student_many_lessons_and_subscription["id"]
+
+    response = await authorized_client.get(f"/subscriptions/{sub_id}")
+    assert response.status_code == 200, response.text
+    assert response.json()["id"] == sub_id
+
+# Несуществующий id → 404
+async def test_get_subscription_by_nonexistent_id_returns_404(authorized_client):
+
+    response = await authorized_client.get("/subscriptions/1")
+    assert response.status_code == 404, response.text
+
+# Нечисловой id → 422
+async def test_get_subscription_by_non_numeric_id_returns_422(authorized_client):
+    response = await authorized_client.get("/subscriptions/asd")
+    assert response.status_code == 422, response.text
+
+# Без авторизации → 401
+async def test_get_subscription_by_id_without_auth_returns_401(client):
+    response = await client.get("/subscriptions/1")
+    assert response.status_code == 401, response.text
