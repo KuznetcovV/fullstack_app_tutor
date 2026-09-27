@@ -99,6 +99,9 @@ async def update_subscription_service(db: AsyncSession,
     
     if data.student_id is not None:
         await get_student_or_404(db=db, student_id=data.student_id)
+        await check_existing_lessons_for_subscription(db=db, student_id=data.student_id)
+
+    
 
     validate_subscription_dates(subscription=subscription, data=data)
     
@@ -106,8 +109,7 @@ async def update_subscription_service(db: AsyncSession,
 
     for field, value in updated_data.items():
         setattr(subscription, field, value)
-
-    await check_intersection_for_existing_subscriptions(db=db, subscription=subscription, exclude_id=subscription.id)
+        await check_existing_lessons_for_subscription(db=db, student_id=data.student_id)
 
     need_recalculate = any(
         field in updated_data
