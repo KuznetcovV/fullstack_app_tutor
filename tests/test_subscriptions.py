@@ -1,4 +1,6 @@
 import pytest
+from app.core.time import today
+from datetime import timedelta
 
 # ─── Создание — POST /subscriptions/ ───
 
@@ -343,3 +345,102 @@ async def test_create_subscription_without_auth_returns_401(client):
     })
 
     assert post_response.status_code == 401, post_response.text
+
+# ─── Получение списка — GET /subscriptions/ ───
+
+# Без фильтров → все абонементы
+async def test_get_subscriptions_returns_200(created_solo_student_many_lessons_and_many_subscriptions, authorized_client):
+    response = await authorized_client.get("/subscriptions/")
+
+    assert response.status_code == 200, response.text
+    assert len(response.json()) == 2
+
+# is_active=true → только те, где start_date <= today <= end_date
+async def test_get_subscriptions_with_active_filter_returns_only_active(created_solo_student_many_lessons_and_many_subscriptions, authorized_client):
+    expired_sub, active_sub = created_solo_student_many_lessons_and_many_subscriptions
+
+    response = await authorized_client.get("/subscriptions/", params={"is_active": True})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == 1
+    assert body[0]["id"] == active_sub["id"]
+
+# is_active=false → только просроченные/ещё не начавшиеся
+async def test_get_subscriptions_with_inactive_filter_returns_only_inactive(created_solo_student_many_lessons_and_many_subscriptions, authorized_client):
+    expired_sub, active_sub= created_solo_student_many_lessons_and_many_subscriptions
+
+    response = await authorized_client.get("/subscriptions/", params={"is_active": False})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == 1
+    assert body[0]["id"] == expired_sub["id"]
+
+
+# is_paid=true / is_paid=false
+@pytest.mark.parametrize("is_paid", [True, False])
+async def test_get_subscriptions_with_is_paid_filter_returns_matching(is_paid, created_solo_student_many_lessons_and_many_subscriptions, authorized_client):
+    response = await authorized_client.get("/subscriptions/", params={"is_paid": is_paid})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == 1
+    assert body[0]["is_paid"] == is_paid
+
+# Комбинация is_active + is_paid
+async def test_get_subscriptions_with_active_and_paid_filters_returns_matching(
+    created_solo_student_many_lessons_and_many_subscriptions, authorized_client
+):
+    start_date = (today() - timedelta(days=5)).isoformat()
+    end_date = (today() + timedelta(days=5)).isoformat()
+
+    other_student_response = await authorized_client.post("/students/", json={
+        "first_name": "Второй",
+        "last_name": "Ученик",
+        "number_of_class": 7,
+        "phone": "+79990000002",
+        "parent_name": "Родитель2",
+        "parent_phone": "+79990000003",
+        "notes": None,
+        "is_active": True
+    })
+    assert other_student_response.status_code == 201, other_student_response.text
+    other_student_id = other_student_response.json()["id"]
+
+    other_lesson_response = await authorized_client.post("/lessons/", json={
+        "student_id": other_student_id,
+        "day": 2,
+        "time_start": "10:00:00",
+        "time_end": "11:00:00"
+    })
+    assert other_lesson_response.status_code == 201, other_lesson_response.text
+
+    third_subscription = await authorized_client.post("/subscriptions/", json={
+        "student_id": other_student_id,
+        "start_date": start_date,
+        "end_date": end_date,
+        "price_for_one_lesson": 1000,
+        "is_paid": True
+    })
+    assert third_subscription.status_code == 201, third_subscription.text
+
+    response = await authorized_client.get("/subscriptions/", params={"is_paid": True, "is_active": True})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == 1
+    assert body[0]["id"] == third_subscription.json()["id"]
+
+# Пустой список, если абонементов нет → 200, []
+async def test_get_subscriptions_empty_returns_200(created_solo_student, authorized_client):
+    response = await authorized_client.get("/subscriptions/")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == 0
+
+# Без авторизации → 401
+async def test_get_subscriptions_without_auth_returns_401(client):
+    response = await client.get("/subscriptions/")
+    assert response.status_code == 401

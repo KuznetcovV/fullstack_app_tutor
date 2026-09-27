@@ -1,4 +1,5 @@
 import asyncio
+from datetime import timedelta
 import sys
 
 if sys.platform == "win32":
@@ -15,6 +16,7 @@ from sqlalchemy.pool import NullPool
 from app.main import app
 from app.core.config import TEST_DATABASE_URL
 from app.dependencies.database import get_db
+from app.core.time import today
 
 #фикстура для накатывания всех миграций до последней на тестовую бд
 @pytest.fixture(scope="session", autouse=True)
@@ -60,7 +62,7 @@ async def authorized_client(client):
     client.headers["Authorization"] = f"Bearer {response.json()["access_token"]}"
     return client
 
-#создание студента
+#Создание студента
 @pytest_asyncio.fixture
 async def created_solo_student(authorized_client):
     response = await authorized_client.post("/students/", json={
@@ -76,6 +78,7 @@ async def created_solo_student(authorized_client):
     assert response.status_code == 201, f"Не удалось создать студента для фикстуры: {response.text}"
     return response.json()
 
+#Создание трех студентов
 @pytest_asyncio.fixture
 async def created_many_students(authorized_client):
     first_sutdent = await authorized_client.post("/students/", json={
@@ -121,6 +124,7 @@ async def created_many_students(authorized_client):
 
     return result_list
 
+#Создание одного студента с одним занятием в расписании
 @pytest_asyncio.fixture
 async def created_solo_student_and_lesson(created_solo_student, authorized_client):
     response = await authorized_client.post("/lessons/", json={
@@ -132,6 +136,7 @@ async def created_solo_student_and_lesson(created_solo_student, authorized_clien
     assert response.status_code == 201, f"Не удалось создать занятие для фикстуры: {response.text}"
     return response.json()
 
+#Создание одного студента с тремя занятиями в расписании
 @pytest_asyncio.fixture
 async def created_solo_student_and_many_lessons(created_solo_student, authorized_client):
     first_lesson = await authorized_client.post("/lessons/", json={
@@ -168,7 +173,7 @@ STUDENT_TIME_SLOTS = [
     ("13:00:00", "14:00:00"),
     ("14:00:00", "15:00:00"),
 ]
-
+#Создание трех студентов. У каждого по 3 занятия
 @pytest_asyncio.fixture
 async def created_many_students_many_lessons(created_many_students, authorized_client):
 
@@ -194,6 +199,7 @@ async def created_many_students_many_lessons(created_many_students, authorized_c
 
     return students_lessons
 
+#Создание студента и одной записи о занятии
 @pytest_asyncio.fixture
 async def created_solo_student_and_lesson_log(created_solo_student, authorized_client):
     response = await authorized_client.post("/lesson_logs/", json={
@@ -203,3 +209,48 @@ async def created_solo_student_and_lesson_log(created_solo_student, authorized_c
 
     assert response.status_code == 201, f"Не удалось создать лог занятия для фикстуры: {response.text}"
     return response.json()
+
+#Создание одного студента и одного абонемента
+@pytest_asyncio.fixture
+async def created_solo_student_many_lessons_and_subscription(created_solo_student_and_many_lessons, authorized_client):
+    student_id = created_solo_student_and_many_lessons[0]["student_id"]
+
+    response = await authorized_client.post("/subscriptions/", json={
+        "student_id": student_id,
+        "start_date": "2026-09-01",
+        "end_date": "2026-09-30",
+        "price_for_one_lesson": 1000,
+        "is_paid": True
+    })
+
+    assert response.status_code == 201, f"Не удалось создать абонемент для фикстуры: {response.text}"
+
+    return response.json()
+
+#Создание одного студента, у которого три занятия и два абонемента
+@pytest_asyncio.fixture
+async def created_solo_student_many_lessons_and_many_subscriptions(created_solo_student_and_many_lessons, authorized_client):
+    student_id = created_solo_student_and_many_lessons[0]["student_id"]
+
+    start_date = (today() - timedelta(days=5)).isoformat()
+    end_date = (today() + timedelta(days=5)).isoformat()
+
+    first_subscription = await authorized_client.post("/subscriptions/", json={
+        "student_id": student_id,
+        "start_date": "2026-08-01",
+        "end_date": "2026-08-31",
+        "price_for_one_lesson": 1000,
+        "is_paid": True
+    })
+    assert first_subscription.status_code == 201, first_subscription.text
+
+    second_subscription = await authorized_client.post("/subscriptions/", json={
+        "student_id": student_id,
+        "start_date": start_date,
+        "end_date": end_date,
+        "price_for_one_lesson": 1000,
+        "is_paid": False
+    })
+    assert second_subscription.status_code == 201, second_subscription.text
+
+    return [first_subscription.json(), second_subscription.json()]
