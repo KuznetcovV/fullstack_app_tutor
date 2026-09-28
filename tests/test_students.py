@@ -345,5 +345,48 @@ async def test_update_student_with_empty_first_name_returns_422(created_solo_stu
 #Получение несуществующего студента -> 404
 @pytest.mark.parametrize("id", [0, -1, 999999])
 async def test_get_nonexistent_student_returns_404(id, authorized_client):
+
     response = await authorized_client.get(f"/students/{id}")
     assert response.status_code == 404, response.text
+
+#Получение списка студентов без авторизации -> 401
+async def test_get_all_students_without_auth_returns_401(client):
+    response = await client.get("/students/")
+
+    assert response.status_code == 401, response.text
+
+#Получение студента по id с нечисловым id -> 422
+async def test_get_student_by_id_with_non_numeric_id_returns_422(authorized_client):
+    response = await authorized_client.get("/students/asd")
+
+    assert response.status_code == 422, response.text
+
+#Получение студента по id без авторизации -> 401
+async def test_get_student_by_id_without_auth_returns_401(client):
+    response = await client.get("/students/1")
+
+    assert response.status_code == 401, response.text
+
+#Создание студента без авторизации -> 401
+async def test_create_student_without_auth_returns_401(client):
+    response = await client.post("/students/", json={})
+
+    assert response.status_code == 401, response.text
+
+#Обновление студента с нечисловым id -> 422
+async def test_update_student_with_non_numeric_id_returns_422(authorized_client):
+    response = await authorized_client.patch("/students/asd", json={})
+
+    assert response.status_code == 422, response.text
+
+#Обновление студента без авторизации -> 401
+async def test_update_student_without_auth_returns_401(client):
+    response = await client.patch("/students/1", json={})
+
+    assert response.status_code == 401, response.text
+
+#Удаление студента без авторизации -> 401
+async def test_delete_student_without_auth_returns_401(client):
+    response = await client.patch("/students/1", json={})
+
+    assert response.status_code == 401, response.text

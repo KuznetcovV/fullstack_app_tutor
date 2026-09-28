@@ -764,5 +764,18 @@ async def test_get_current_subscription_for_nonexistent_student_returns_404(auth
 
 # GET /students/{id}/current-subscription — без авторизации → 401
 async def test_get_current_subscription_for_student_without_auth_returns_401(client):
+
     response = await client.get("/students/1/current-subscription")
     assert response.status_code == 401, response.text
+
+# GET /students/{id}/subscriptions — нечисловой id -> 422
+async def test_get_subscriptions_for_student_with_non_numeric_id_returns_422(authorized_client):
+    response = await authorized_client.get("/students/asd/subscriptions")
+
+    assert response.status_code == 422, response.text
+
+# GET /students/{id}/current-subscription — нечисловой id -> 422
+async def test_get_current_subscription_for_student_with_non_numeric_id_returns_422(authorized_client):
+    response = await authorized_client.get("/students/asd/current-subscription")
+
+    assert response.status_code == 422, response.text

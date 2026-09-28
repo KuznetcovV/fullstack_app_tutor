@@ -517,3 +517,9 @@ async def test_get_lessons_for_student_with_non_numeric_id_returns_422(authorize
 async def test_get_lessons_for_student_without_auth_returns_401(client):
     response = await client.get("/students/asd/lessons")
     assert response.status_code == 401, response.text
+
+#Создание занятия без авторизации -> 401
+async def test_create_lesson_without_auth_returns_401(client):
+    response = await client.post("/lessons/", json={})
+
+    assert response.status_code == 401, response.text
