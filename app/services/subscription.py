@@ -108,7 +108,8 @@ async def update_subscription_service(db: AsyncSession,
 
     for field, value in updated_data.items():
         setattr(subscription, field, value)
-        await check_existing_lessons_for_subscription(db=db, student_id=data.student_id)
+
+    await check_intersection_for_existing_subscriptions(db=db, subscription=subscription, exclude_id=subscription.id)
 
     need_recalculate = any(
         field in updated_data
@@ -192,8 +193,9 @@ async def calculate_subscription(
 async def check_existing_lessons_for_subscription(db: AsyncSession, student_id: int):
     query = select(Lesson).where(Lesson.student_id == student_id)
     result = await db.execute(query)
-    lesson_exists = result.scalars().first()
-    
+    all_rows = result.scalars().all()
+    lesson_exists = all_rows[0] if all_rows else None
+
     if lesson_exists is None:
         raise ZeroLessonsForSubscriptionCreate()
 

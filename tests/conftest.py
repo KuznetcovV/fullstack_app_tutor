@@ -254,3 +254,26 @@ async def created_solo_student_many_lessons_and_many_subscriptions(created_solo_
     assert second_subscription.status_code == 201, second_subscription.text
 
     return [first_subscription.json(), second_subscription.json()]
+
+#Создает двух учеников, у первого 5 занятий в сентябре 2026, у второго 4
+@pytest_asyncio.fixture
+async def created_two_students_different_weekdays(created_many_students, authorized_client):
+    first_student, second_student, *_ = created_many_students
+
+    first_lesson = await authorized_client.post("/lessons/", json={
+        "student_id": first_student["id"],
+        "day": 2,
+        "time_start": "12:00:00",
+        "time_end": "13:00:00"
+    })
+    assert first_lesson.status_code == 201, first_lesson.text
+
+    second_lesson = await authorized_client.post("/lessons/", json={
+        "student_id": second_student["id"],
+        "day": 3,
+        "time_start": "12:00:00",
+        "time_end": "13:00:00"
+    })
+    assert second_lesson.status_code == 201, second_lesson.text
+
+    return first_student, second_student
