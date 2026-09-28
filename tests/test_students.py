@@ -387,6 +387,6 @@ async def test_update_student_without_auth_returns_401(client):
 
 #Удаление студента без авторизации -> 401
 async def test_delete_student_without_auth_returns_401(client):
-    response = await client.patch("/students/1", json={})
+    response = await client.delete("/students/1")
 
     assert response.status_code == 401, response.text
