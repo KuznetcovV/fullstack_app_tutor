@@ -733,7 +733,6 @@ async def test_get_subscriptions_for_student_without_auth_returns_401(client):
 
     assert response.status_code == 401, response.text
 
-
 # GET /students/{id}/current-subscription — есть активный → 200
 async def test_get_current_subscription_for_student_returns_200(created_solo_student_many_lessons_and_many_subscriptions, authorized_client):
     student_id = created_solo_student_many_lessons_and_many_subscriptions[0]["student_id"]
