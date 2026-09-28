@@ -485,3 +485,35 @@ async def test_delete_lesson_without_auth_returns_401(client):
     response = await client.delete("/lessons/1")
 
     assert response.status_code == 401, response.text
+
+
+# GET /students/{id}/lessons
+
+async def test_get_lessons_for_student_returns_200(created_solo_student_and_many_lessons, authorized_client):
+    student_id = created_solo_student_and_many_lessons[0]["student_id"]
+
+    response = await authorized_client.get(f"/students/{student_id}/lessons")
+    assert response.status_code == 200, response.text
+    body = response.json()
+
+    first_lesson, second_lesson, third_lesson = body
+    assert first_lesson["id"] == created_solo_student_and_many_lessons[0]["id"]
+    assert second_lesson["id"] == created_solo_student_and_many_lessons[1]["id"]
+    assert third_lesson["id"] == created_solo_student_and_many_lessons[2]["id"]
+
+async def test_get_lessons_for_student_empty_returns_404(created_solo_student, authorized_client):
+    student_id = created_solo_student["id"]
+    response = await authorized_client.get(f"/students/{student_id}/lessons")
+    assert response.status_code == 404, response.text
+
+async def test_get_lessons_for_nonexistent_student_returns_404(authorized_client):
+    response = await authorized_client.get("/students/1/lessons")
+    assert response.status_code == 404, response.text
+
+async def test_get_lessons_for_student_with_non_numeric_id_returns_422(authorized_client):
+    response = await authorized_client.get("/students/asd/lessons")
+    assert response.status_code == 422, response.text
+
+async def test_get_lessons_for_student_without_auth_returns_401(client):
+    response = await client.get("/students/asd/lessons")
+    assert response.status_code == 401, response.text
