@@ -2,6 +2,10 @@ import asyncio
 from datetime import timedelta
 import sys
 
+from app.core.security import hash_password
+from app.models.user import User, UserRole
+from app.services.auth import generate_tokens
+
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
@@ -277,3 +281,78 @@ async def created_two_students_different_weekdays(created_many_students, authori
     assert second_lesson.status_code == 201, second_lesson.text
 
     return first_student, second_student
+
+@pytest_asyncio.fixture
+async def admin_client(db_session, client):
+    user = User(
+            login="admin",
+            email="admin@test.ru",
+            password_hash=hash_password("admin123"),
+            role=UserRole.ADMIN,
+            refresh_token_hash=None
+    )
+
+    db_session.add(user)
+    await db_session.commit()
+    await db_session.refresh(user)
+
+    tokens = await generate_tokens(db_session, user)
+    access_token = tokens.access_token
+
+    client.headers["Authorization"] = f"Bearer {access_token}"
+
+    return client
+
+
+@pytest_asyncio.fixture
+async def created_many_users(db_session):
+    users = [
+        User(
+            login="ivan",
+            email="ivan@test.ru",
+            password_hash=hash_password("123456"),
+            role=UserRole.STUDENT,
+            refresh_token_hash=None
+        ),
+
+        User(
+            login="maria",
+            email="maria@test.ru",
+            password_hash=hash_password("123456"),
+            role=UserRole.STUDENT,
+            refresh_token_hash=None
+        ),
+
+        User(
+            login="dmitriy",
+            email=None,
+            password_hash=hash_password("123456"),
+            role=UserRole.TEACHER,
+            refresh_token_hash=None
+        ),
+
+        User(
+            login="alina",
+            email=None,
+            password_hash=hash_password("123456"),
+            role=UserRole.TEACHER,
+            refresh_token_hash=None
+        ),
+    ]
+
+    db_session.add_all(users)
+    await db_session.commit()
+
+    for i in range(len(users)):
+        await db_session.refresh(users[i])
+        users[i] = {
+            "id": users[i].id,
+            "login": users[i].login,
+            "email": users[i].email,
+            "password_hash": users[i].password_hash,
+            "role": users[i].role,
+            "refresh_token_hash": users[i].refresh_token_hash
+        }
+
+
+    return users

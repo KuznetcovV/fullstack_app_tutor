@@ -7,7 +7,7 @@ from app.models.lesson_log import LessonLog
 async def seed_lesson_logs(db: AsyncSession):
     
     result = await db.execute(select(LessonLog).limit(1))
-    exists =result.scalar_one_or_none()
+    exists = result.scalar_one_or_none()
     if exists:
         print("Lesson logs already exists")
         return
