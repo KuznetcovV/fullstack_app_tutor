@@ -6,9 +6,6 @@ from app.core.security import hash_password
 from app.models.user import User, UserRole
 from app.services.auth import generate_tokens
 
-if sys.platform == "win32":
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
@@ -22,8 +19,12 @@ from app.core.config import TEST_DATABASE_URL
 from app.dependencies.database import get_db
 from app.core.time import today
 
+
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
 #фикстура для накатывания всех миграций до последней на тестовую бд
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def aply_migrations():
     cfg = Config("alembic-test.ini")
     command.upgrade(cfg, "head")
@@ -34,7 +35,7 @@ test_engine = create_async_engine(TEST_DATABASE_URL, poolclass=NullPool)
 
 #сессия для одного теста обернутая в транзакцию с откатом после 
 @pytest_asyncio.fixture
-async def db_session():
+async def db_session(aply_migrations):
     async with test_engine.connect() as connection:
         await connection.begin()
         session = AsyncSession(bind=connection, join_transaction_mode="create_savepoint")
