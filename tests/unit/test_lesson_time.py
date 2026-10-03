@@ -51,3 +51,16 @@ def test_validate_lesson_time_skips_validation_when_nothing_provided():
     data = LessonUpdate()
 
     assert validate_lesson_time(lesson, data) is None
+
+def test_validate_lesson_time_raises_error_when_end_before_or_equal_start():
+    lesson = Lesson(
+        time_start=time(12, 00, 00),
+        time_end=time(13, 00, 00)
+    )
+
+    data = LessonUpdate(
+        time_start=time(14, 00, 00),
+    )
+
+    with pytest.raises(InvalidLessonTimeInterval):
+        validate_lesson_time(lesson, data)
