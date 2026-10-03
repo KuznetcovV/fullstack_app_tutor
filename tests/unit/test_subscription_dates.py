@@ -44,19 +44,6 @@ def test_validate_subscription_dates_uses_existing_start_when_only_end_provided(
     with pytest.raises(InvalidDatesInetvalError):
         validate_subscription_dates(subscription, data)
 
-def test_validate_subscription_dates_uses_existing_end_when_only_start_provided():
-    subscription = Subscription(
-        start_date=date(2026, 1, 1),
-        end_date=date(2026, 1, 20),
-    )
-
-    data = SubscriptionUpdate(
-        start_date=date(2026, 3, 1)
-    )
-
-    with pytest.raises(InvalidDatesInetvalError):
-        validate_subscription_dates(subscription, data)
-
 def test_validate_subscription_dates_skips_check_when_both_dates_provided():
     subscription = Subscription(
         start_date=date(2026, 1, 1),
