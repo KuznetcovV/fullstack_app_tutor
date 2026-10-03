@@ -1,6 +1,5 @@
 from unittest.mock import AsyncMock, MagicMock
 from types import SimpleNamespace
-from datetime import date
 import pytest
 from app.exceptions.subscription import ZeroLessonsForSubscriptionCreate
 from app.services.subscription import check_existing_lessons_for_subscription
