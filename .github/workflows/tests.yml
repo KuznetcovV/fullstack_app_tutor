@@ -1,19 +1,32 @@
-# Название, которое будет видно во вкладке Actions
 name: Tests
 
-# Когда запускать: при пуше в main и при любом PR
+
 on:
   push:
     branches: [main]
   pull_request:
 
 jobs:
-  unit-tests:                      # имя job, оно же отобразится в проверках PR
-    runs-on: ubuntu-latest         # чистая виртуальная машина с Ubuntu
+  tests:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: fastapi_test_db
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - "5433:5432"
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+
     env:
-      POSTGRES_DB: fastapi_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/fastapi_db
       TEST_DATABASE_URL: postgresql+asyncpg://postgres:postgres@127.0.0.1:5433/fastapi_test_db?ssl=disable
       SECRET_KEY: your_secret_key_here
@@ -26,23 +39,17 @@ jobs:
 
 
     steps:
-      # Шаг 1: скачать код репозитория на пустую машину.
-      # Без него в рабочей папке ничего нет.
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Шаг 2: поставить Python нужной версии.
-      # cache: pip сохраняет скачанные пакеты между запусками, чтобы CI шёл быстрее.
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.13"
           cache: pip
 
-      # Шаг 3: поставить зависимости проекта (так же, как ты делал локально).
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      # Шаг 4: запустить только юниты. БД им не нужна.
-      - name: Run unit tests
-        run: pytest tests/unit -v
+      - name: Run tests
+        run: pytest -v
