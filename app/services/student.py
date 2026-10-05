@@ -65,7 +65,7 @@ async def get_lessons_for_student_service(db: AsyncSession, student_id: int) -> 
 
     await get_student_or_404(db=db, student_id=student_id)
     
-    query = select(Lesson).where(Lesson.student_id == student_id)
+    query = select(Lesson).where(Lesson.student_id == student_id).order_by(Lesson.day).order_by(Lesson.time_start)
 
     result = await db.execute(query)
 
