@@ -1,0 +1,34 @@
+# Название, которое будет видно во вкладке Actions
+name: Tests
+
+# Когда запускать: при пуше в main и при любом PR
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  unit-tests:                      # имя job, оно же отобразится в проверках PR
+    runs-on: ubuntu-latest         # чистая виртуальная машина с Ubuntu
+
+    steps:
+      # Шаг 1: скачать код репозитория на пустую машину.
+      # Без него в рабочей папке ничего нет.
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Шаг 2: поставить Python нужной версии.
+      # cache: pip сохраняет скачанные пакеты между запусками, чтобы CI шёл быстрее.
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      # Шаг 3: поставить зависимости проекта (так же, как ты делал локально).
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # Шаг 4: запустить только юниты. БД им не нужна.
+      - name: Run unit tests
+        run: pytest tests/unit -v
