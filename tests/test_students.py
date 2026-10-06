@@ -391,8 +391,8 @@ async def test_delete_student_without_auth_returns_401(client):
 
     assert response.status_code == 401, response.text
 
-@pytest.mark.parametrize("field", ["first_name", "last_name", "number_of_class"])
-async def test_update_lesson_with_null_required_field_returns_422(field, authorized_client, created_solo_student):
+@pytest.mark.parametrize("field", ["first_name", "last_name", "number_of_class", "is_active"])
+async def test_update_student_with_null_required_field_returns_422(field, authorized_client, created_solo_student):
     student_id = created_solo_student["id"]
     response = await authorized_client.patch(f"/students/{student_id}", json={
         field: None
