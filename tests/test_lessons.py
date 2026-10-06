@@ -1,3 +1,5 @@
+from datetime import time
+
 import pytest
 from app.core.time import today
 
@@ -523,3 +525,13 @@ async def test_create_lesson_without_auth_returns_401(client):
     response = await client.post("/lessons/", json={})
 
     assert response.status_code == 401, response.text
+
+#Обнуление обязательного поля в patch
+@pytest.mark.parametrize("field", ["student_id", "day", "time_start", "time_end"])
+async def test_update_lesson_with_null_required_field_returns_422(field, authorized_client, created_solo_student_and_lesson):
+    lesson_id = created_solo_student_and_lesson["id"]
+    response = await authorized_client.patch(f"/lessons/{lesson_id}", json={
+        field: None
+    })
+
+    assert response.status_code == 422, response.text
