@@ -73,3 +73,5 @@ class SubscriptionUpdate(BaseSchema):
                 "Дата начала должна быть раньше даты окончания"
             )
         return self
+
+    
