@@ -568,3 +568,13 @@ async def test_get_lesson_logs_for_student_without_auth_returns_401(client):
     response = await client.get("/students/asd/lesson-logs")
 
     assert response.status_code == 401, response.text
+
+#Обнуление обязательного поля в patch
+@pytest.mark.parametrize("field", ["lesson_log_date", "student_id"])
+async def test_update_lesson_log_with_null_required_field_returns_422(field, authorized_client, created_solo_student_and_lesson_log):
+    lesson_log_id = created_solo_student_and_lesson_log["id"]
+    response = await authorized_client.patch(f"/lesson_logs/{lesson_log_id}", json={
+        field: None
+    })
+
+    assert response.status_code == 422, response.text

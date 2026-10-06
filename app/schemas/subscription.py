@@ -73,3 +73,16 @@ class SubscriptionUpdate(BaseSchema):
                 "Дата начала должна быть раньше даты окончания"
             )
         return self
+
+    @model_validator(mode="after")
+    def validate_null_required_fields(self):
+        required_fields = ["student_id", "start_date", "end_date", "price_for_one_lesson", "is_paid"]
+        for str_field in required_fields:
+            if str_field in self.model_fields_set:
+                value = getattr(self, str_field)
+                if value is None:
+                    raise ValueError(f"Поле {str_field} нельзя обнулить")
+
+        return self
+
+    

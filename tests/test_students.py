@@ -390,3 +390,13 @@ async def test_delete_student_without_auth_returns_401(client):
     response = await client.delete("/students/1")
 
     assert response.status_code == 401, response.text
+
+#Обнуление обязательного поля в patch
+@pytest.mark.parametrize("field", ["first_name", "last_name", "number_of_class", "is_active"])
+async def test_update_student_with_null_required_field_returns_422(field, authorized_client, created_solo_student):
+    student_id = created_solo_student["id"]
+    response = await authorized_client.patch(f"/students/{student_id}", json={
+        field: None
+    })
+
+    assert response.status_code == 422, response.text

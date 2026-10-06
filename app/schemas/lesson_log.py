@@ -1,4 +1,4 @@
-from pydantic import BaseModel, field_validator, ConfigDict
+from pydantic import BaseModel, field_validator, ConfigDict, model_validator
 from datetime import date
 from app.schemas.base_schemas import BaseSchema
 
@@ -93,4 +93,15 @@ class LessonLogUpdate(BaseSchema):
         if not 2 <= value <= 5:
             raise ValueError("Значение не может быть меньше 2 или больше 5")
         return value
+
+    @model_validator(mode="after")
+    def validate_null_required_fields(self):
+        required_fields = ["lesson_log_date", "student_id"]
+        for str_field in required_fields:
+            if str_field in self.model_fields_set:
+                value = getattr(self, str_field)
+                if value is None:
+                    raise ValueError(f"Поле {str_field} нельзя обнулить")
+
+        return self
 

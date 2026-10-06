@@ -779,3 +779,13 @@ async def test_get_current_subscription_for_student_with_non_numeric_id_returns_
     response = await authorized_client.get("/students/asd/current-subscription")
 
     assert response.status_code == 422, response.text
+
+#Обнуление обязательного поля в patch
+@pytest.mark.parametrize("field", ["student_id", "start_date", "end_date", "price_for_one_lesson", "is_paid"])
+async def test_update_subscription_with_null_required_field_returns_422(field, authorized_client, created_solo_student_many_lessons_and_subscription):
+    subscription_id = created_solo_student_many_lessons_and_subscription["id"]
+    response = await authorized_client.patch(f"/subscriptions/{subscription_id}", json={
+        field: None
+    })
+
+    assert response.status_code == 422, response.text
