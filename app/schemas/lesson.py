@@ -65,3 +65,14 @@ class LessonUpdate(BaseSchema):
             raise ValueError("Время начала не может быть больше или равно времени конца занятия.")
         
         return self
+
+    @model_validator(mode="after")
+    def validate_null_required_fields(self):
+        required_fields = ["student_id", "day", "time_start", "time_end"]
+        for str_field in required_fields:
+            if str_field in self.model_fields_set:
+                value = getattr(self, str_field)
+                if value is None:
+                    raise ValueError(f"Поле {str_field} нельзя обнулить")
+
+        return self
