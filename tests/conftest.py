@@ -283,6 +283,7 @@ async def created_two_students_different_weekdays(created_many_students, authori
 
     return first_student, second_student
 
+#создание пользователя-админа
 @pytest_asyncio.fixture
 async def admin_client(db_session, client):
     user = User(
@@ -304,7 +305,7 @@ async def admin_client(db_session, client):
 
     return client
 
-
+#создание 4 пользователей
 @pytest_asyncio.fixture
 async def created_many_users(db_session):
     users = [

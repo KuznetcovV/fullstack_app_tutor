@@ -33,7 +33,7 @@ class Lesson(TimestampMixin, Base):
 
     lesson_logs: Mapped[list["LessonLog"]] = relationship(
         back_populates="lesson",
-        cascade="all, delete-orphan"
+        passive_deletes=True
     )
 
 
