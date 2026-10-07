@@ -213,7 +213,7 @@ async def created_many_students_many_lessons(created_many_students, authorized_c
 #Создание студента и одной записи о занятии
 @pytest_asyncio.fixture
 async def created_solo_student_and_lesson_log(created_solo_student, authorized_client):
-    response = await authorized_client.post("/lesson_logs/", json={
+    response = await authorized_client.post("/lesson-logs/", json={
         "student_id": created_solo_student["id"],
         "lesson_log_date": "2026-09-22"
     })

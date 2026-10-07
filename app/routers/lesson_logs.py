@@ -8,7 +8,7 @@ from app.schemas.lesson_log import LessonLogCreate, LessonLogResponse, LessonLog
 from app.dependencies.auth import get_current_user
 
 
-router = APIRouter(prefix="/lesson_logs", tags=["Записи о занятиях"], dependencies=[Depends(get_current_user)])
+router = APIRouter(prefix="/lesson-logs", tags=["Записи о занятиях"], dependencies=[Depends(get_current_user)])
 
 #Получение
 #Получение всех записей о занятиях
