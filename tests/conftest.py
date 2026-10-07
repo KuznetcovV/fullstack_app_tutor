@@ -15,13 +15,19 @@ from alembic import command
 from sqlalchemy.pool import NullPool
 
 from app.main import app
-from app.core.config import TEST_DATABASE_URL
+from app.core.config import DATABASE_URL, TEST_DATABASE_URL
 from app.dependencies.database import get_db
 from app.core.time import today
 
 
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+if TEST_DATABASE_URL is None:
+    raise RuntimeError("TEST_DATABASE_URL is not configured")
+
+if TEST_DATABASE_URL == DATABASE_URL:
+    raise RuntimeError("TEST_DATABASE_URL must differ from DATABASE_URL")
 
 #фикстура для накатывания всех миграций до последней на тестовую бд
 @pytest.fixture(scope="session")

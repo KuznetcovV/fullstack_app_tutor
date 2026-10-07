@@ -24,9 +24,6 @@ if not FRONTEND_URL:
 if not DATABASE_URL:
     raise RuntimeError("DATABASE_URL is not configured")
 
-if not TEST_DATABASE_URL:
-    raise RuntimeError("TEST_DATABASE_URL is not cinfigured")
-
 if not SECRET_KEY:
     raise RuntimeError("SECRET_KEY is not configured")
 
