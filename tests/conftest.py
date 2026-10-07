@@ -289,28 +289,6 @@ async def created_two_students_different_weekdays(created_many_students, authori
 
     return first_student, second_student
 
-#создание пользователя-админа
-@pytest_asyncio.fixture
-async def admin_client(db_session, client):
-    user = User(
-            login="admin",
-            email="admin@test.ru",
-            password_hash=hash_password("admin123"),
-            role=UserRole.ADMIN,
-            refresh_token_hash=None
-    )
-
-    db_session.add(user)
-    await db_session.commit()
-    await db_session.refresh(user)
-
-    tokens = await generate_tokens(db_session, user)
-    access_token = tokens.access_token
-
-    client.headers["Authorization"] = f"Bearer {access_token}"
-
-    return client
-
 #создание 4 пользователей
 @pytest_asyncio.fixture
 async def created_many_users(db_session):
@@ -364,3 +342,71 @@ async def created_many_users(db_session):
 
 
     return users
+
+#создание пользователя-админа
+@pytest_asyncio.fixture
+async def admin_client(db_session, client):
+    user = User(
+            login="admin",
+            email="admin@test.ru",
+            password_hash=hash_password("admin123"),
+            role=UserRole.ADMIN,
+            refresh_token_hash=None
+    )
+
+    db_session.add(user)
+    await db_session.commit()
+    await db_session.refresh(user)
+
+    tokens = await generate_tokens(db_session, user)
+    access_token = tokens.access_token
+
+    client.headers["Authorization"] = f"Bearer {access_token}"
+
+    return client
+
+#создание пользователя-учителя-репетитора
+@pytest_asyncio.fixture
+async def teacher_client(db_session, client):
+
+    user = User(
+            login="teacher",
+            email="teacher@test.ru",
+            password_hash=hash_password("teacher123"),
+            role=UserRole.TEACHER,
+            refresh_token_hash=None
+    )
+
+    db_session.add(user)
+    await db_session.commit()
+    await db_session.refresh(user)
+
+    tokens = await generate_tokens(db_session, user)
+    access_token = tokens.access_token
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test", headers={"Authorization": f"Bearer {access_token}"}) as ac:
+        yield ac
+
+#создание пользователя-ученика
+@pytest_asyncio.fixture
+async def student_client(db_session, client):
+
+    user = User(
+            login="student",
+            email="student@test.ru",
+            password_hash=hash_password("student123"),
+            role=UserRole.STUDENT,
+            refresh_token_hash=None
+    )
+
+    db_session.add(user)
+    await db_session.commit()
+    await db_session.refresh(user)
+
+    tokens = await generate_tokens(db_session, user)
+    access_token = tokens.access_token
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test", headers={"Authorization": f"Bearer {access_token}"}) as ac:
+        yield ac
