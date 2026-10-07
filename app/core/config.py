@@ -8,8 +8,6 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 
 TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL")
 
-LOCAL_DATABASE_URL = os.getenv("LOCAL_DATABASE_URL")
-
 SECRET_KEY = os.getenv("SECRET_KEY")
 
 DEBUG = os.getenv("DEBUG", "false").lower() == "true"
