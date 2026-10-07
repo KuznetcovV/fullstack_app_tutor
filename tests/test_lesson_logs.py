@@ -578,3 +578,25 @@ async def test_update_lesson_log_with_null_required_field_returns_422(field, aut
     })
 
     assert response.status_code == 422, response.text
+
+
+async def test_delete_lesson_keeps_lesson_log_with_null_lesson_id(created_solo_student_and_lesson, authorized_client):
+    student_id = created_solo_student_and_lesson["student_id"]
+    lesson_id = created_solo_student_and_lesson["id"]
+    create_log_response = await authorized_client.post("/lesson_logs/", json={
+        "student_id": student_id,
+        "lesson_id": lesson_id,
+        "lesson_log_date": "2026-09-22"
+    })
+
+    assert create_log_response.status_code == 201, create_log_response.text
+
+    log_id = create_log_response.json()["id"]
+
+    delete_lesson_response = await authorized_client.delete(f"/lessons/{lesson_id}")
+    assert delete_lesson_response.status_code == 204, delete_lesson_response.text
+
+    get_log_response = await authorized_client.get(f"/lesson_logs/{log_id}")
+    assert get_log_response.status_code == 200, get_log_response.text
+    assert get_log_response.json()["lesson_id"] is None
+    
