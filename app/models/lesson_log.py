@@ -34,6 +34,6 @@ class LessonLog(TimestampMixin, Base):
         back_populates="lesson_logs"
     )
 
-    lesson: Mapped["Lesson"] = relationship(
+    lesson: Mapped["Lesson | None"] = relationship(
         back_populates="lesson_logs"
     )

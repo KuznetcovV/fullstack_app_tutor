@@ -4,7 +4,7 @@ import pytest
 async def test_create_lesson_log_with_minimal_fields_returns_201(created_solo_student_and_lesson, authorized_client):
     student_id = created_solo_student_and_lesson["student_id"]
 
-    response = await authorized_client.post("/lesson_logs/", json={
+    response = await authorized_client.post("/lesson-logs/", json={
         "student_id": student_id,
         "lesson_log_date": "1998-01-01"
     })
@@ -21,7 +21,7 @@ async def test_create_lesson_log_with_all_fields_returns_201(created_solo_studen
     student_id = created_solo_student_and_lesson["student_id"]
     lesson_id = created_solo_student_and_lesson["id"]
 
-    response = await authorized_client.post("/lesson_logs/", json={
+    response = await authorized_client.post("/lesson-logs/", json={
         "student_id": student_id,
         "lesson_id": lesson_id,
         "lesson_log_date": "1998-01-01",
@@ -47,7 +47,7 @@ async def test_create_lesson_log_with_all_fields_returns_201(created_solo_studen
 
 # Создание лога для несуществующего ученика
 async def test_create_lesson_log_with_nonexistent_student_returns_404(authorized_client):
-    response = await authorized_client.post("/lesson_logs/", json={
+    response = await authorized_client.post("/lesson-logs/", json={
         "student_id": 1,
         "lesson_log_date": "1998-01-01"
     })
@@ -58,7 +58,7 @@ async def test_create_lesson_log_with_nonexistent_student_returns_404(authorized
 async def test_create_lesson_log_with_nonexistent_lesson_returns_404(created_solo_student, authorized_client):
     student_id = created_solo_student["id"]
 
-    response = await authorized_client.post("/lesson_logs/", json={
+    response = await authorized_client.post("/lesson-logs/", json={
         "student_id": student_id,
         "lesson_log_date": "1998-01-01",
         "lesson_id": 1
@@ -73,7 +73,7 @@ async def test_create_lesson_log_with_foreign_lesson_returns_409(created_many_st
 
     first_student_first_lesson_id = created_many_students_many_lessons[first_student_id][0]["id"]
 
-    response = await authorized_client.post("/lesson_logs/", json={
+    response = await authorized_client.post("/lesson-logs/", json={
         "student_id": second_student_id,
         "lesson_id": first_student_first_lesson_id,
         "lesson_log_date": "1998-01-01"
@@ -85,7 +85,7 @@ async def test_create_lesson_log_with_foreign_lesson_returns_409(created_many_st
 async def test_create_lesson_log_with_null_lesson_id_returns_201(created_solo_student, authorized_client):
     student_id = created_solo_student["id"]
 
-    response = await authorized_client.post("/lesson_logs/", json={
+    response = await authorized_client.post("/lesson-logs/", json={
         "student_id": student_id,
         "lesson_id": None,
         "lesson_log_date": "2026-09-22"
@@ -95,7 +95,7 @@ async def test_create_lesson_log_with_null_lesson_id_returns_201(created_solo_st
 
 # Создание лога без обязательного поля student_id
 async def test_create_lesson_log_without_student_id_returns_422(authorized_client):
-    response = await authorized_client.post("/lesson_logs/", json={
+    response = await authorized_client.post("/lesson-logs/", json={
         "lesson_id": 1,
         "lesson_log_date": "2026-09-22"
     })
@@ -104,7 +104,7 @@ async def test_create_lesson_log_without_student_id_returns_422(authorized_clien
 
 # Создание лога с нечисловым student_id
 async def test_create_lesson_log_with_non_numeric_student_id_returns_422(authorized_client):
-    response = await authorized_client.post("/lesson_logs/", json={
+    response = await authorized_client.post("/lesson-logs/", json={
         "student_id": "asd",
         "lesson_id": 1,
         "lesson_log_date": "2026-09-22"
@@ -114,7 +114,7 @@ async def test_create_lesson_log_with_non_numeric_student_id_returns_422(authori
 
 # Создание лога без обязательного поля lesson_log_date
 async def test_create_lesson_log_without_date_returns_422(created_solo_student, authorized_client):
-    response = await authorized_client.post("/lesson_logs/", json={
+    response = await authorized_client.post("/lesson-logs/", json={
         "student_id": created_solo_student["id"],
     })
 
@@ -122,7 +122,7 @@ async def test_create_lesson_log_without_date_returns_422(created_solo_student, 
 
 # Создание лога с датой в неверном формате
 async def test_create_lesson_log_with_invalid_date_format_returns_422(created_solo_student, authorized_client):
-    response = await authorized_client.post("/lesson_logs/", json={
+    response = await authorized_client.post("/lesson-logs/", json={
         "student_id": created_solo_student["id"],
         "lesson_log_date": "21.11.1998"
     })
@@ -133,7 +133,7 @@ async def test_create_lesson_log_with_invalid_date_format_returns_422(created_so
 async def test_create_lesson_log_with_too_long_topic_returns_422(created_solo_student, authorized_client):
     student_id = created_solo_student["id"]
     topic = 'a' * 1001
-    response = await authorized_client.post("/lesson_logs/", json={
+    response = await authorized_client.post("/lesson-logs/", json={
         "student_id": student_id,
         "topic": topic,
         "lesson_log_date": "2026-09-22"
@@ -145,7 +145,7 @@ async def test_create_lesson_log_with_too_long_topic_returns_422(created_solo_st
 async def test_create_lesson_log_with_max_length_topic_returns_201(created_solo_student, authorized_client):
     student_id = created_solo_student["id"]
     topic = 'a' * 1000
-    response = await authorized_client.post("/lesson_logs/", json={
+    response = await authorized_client.post("/lesson-logs/", json={
         "student_id": student_id,
         "topic": topic,
         "lesson_log_date": "2026-09-22"
@@ -156,7 +156,7 @@ async def test_create_lesson_log_with_max_length_topic_returns_201(created_solo_
 # Создание лога с пустой строкой в topic
 async def test_create_lesson_log_with_empty_topic_returns_422(created_solo_student, authorized_client):
     student_id = created_solo_student["id"]
-    response = await authorized_client.post("/lesson_logs/", json={
+    response = await authorized_client.post("/lesson-logs/", json={
         "student_id": student_id,
         "topic": "",
         "lesson_log_date": "2026-09-22"
@@ -168,7 +168,7 @@ async def test_create_lesson_log_with_empty_topic_returns_422(created_solo_stude
 async def test_create_lesson_log_with_textbook_over_255_returns_422(created_solo_student, authorized_client):
     student_id = created_solo_student["id"]
     textbook = "a" * 256
-    response = await authorized_client.post("/lesson_logs/", json={
+    response = await authorized_client.post("/lesson-logs/", json={
         "student_id": student_id,
         "textbook": textbook,
         "lesson_log_date": "2026-09-22"
@@ -180,7 +180,7 @@ async def test_create_lesson_log_with_textbook_over_255_returns_422(created_solo
 async def test_create_lesson_log_with_max_length_textbook_returns_201(created_solo_student, authorized_client):
     student_id = created_solo_student["id"]
     textbook = "a" * 255
-    response = await authorized_client.post("/lesson_logs/", json={
+    response = await authorized_client.post("/lesson-logs/", json={
         "student_id": student_id,
         "textbook": textbook,
         "lesson_log_date": "2026-09-22"
@@ -192,7 +192,7 @@ async def test_create_lesson_log_with_max_length_textbook_returns_201(created_so
 async def test_create_lesson_log_with_very_long_solved_tasks_returns_201(created_solo_student, authorized_client):
     student_id = created_solo_student["id"]
     solved_tasks = "a" * 5000
-    response = await authorized_client.post("/lesson_logs/", json={
+    response = await authorized_client.post("/lesson-logs/", json={
         "student_id": student_id,
         "solved_tasks": solved_tasks,
         "lesson_log_date": "2026-09-22"
@@ -204,7 +204,7 @@ async def test_create_lesson_log_with_very_long_solved_tasks_returns_201(created
 async def test_create_lesson_log_with_too_long_comment_returns_422(created_solo_student, authorized_client):
     student_id = created_solo_student["id"]
     comment = "a" * 1001
-    response = await authorized_client.post("/lesson_logs/", json={
+    response = await authorized_client.post("/lesson-logs/", json={
         "student_id": student_id,
         "comment": comment,
         "lesson_log_date": "2026-09-22"
@@ -216,7 +216,7 @@ async def test_create_lesson_log_with_too_long_comment_returns_422(created_solo_
 async def test_create_lesson_log_with_empty_comment_returns_422(created_solo_student, authorized_client):
     student_id = created_solo_student["id"]
     comment = ""
-    response = await authorized_client.post("/lesson_logs/", json={
+    response = await authorized_client.post("/lesson-logs/", json={
         "student_id": student_id,
         "comment": comment,
         "lesson_log_date": "2026-09-22"
@@ -228,7 +228,7 @@ async def test_create_lesson_log_with_empty_comment_returns_422(created_solo_stu
 @pytest.mark.parametrize("grade", [1, 6])
 async def test_create_lesson_log_with_grade_below_or_above_range_returns_422(grade, created_solo_student, authorized_client):
     student_id = created_solo_student["id"]
-    response = await authorized_client.post("/lesson_logs/", json={
+    response = await authorized_client.post("/lesson-logs/", json={
         "student_id": student_id,
         "grade": grade,
         "lesson_log_date": "2026-09-22"
@@ -240,7 +240,7 @@ async def test_create_lesson_log_with_grade_below_or_above_range_returns_422(gra
 @pytest.mark.parametrize("grade", [2, 3, 4, 5])
 async def test_create_lesson_log_with_all_grades_returns_201(grade, created_solo_student, authorized_client):
     student_id = created_solo_student["id"]
-    response = await authorized_client.post("/lesson_logs/", json={
+    response = await authorized_client.post("/lesson-logs/", json={
         "student_id": student_id,
         "grade": grade,
         "lesson_log_date": "2026-09-22"
@@ -251,7 +251,7 @@ async def test_create_lesson_log_with_all_grades_returns_201(grade, created_solo
 # Создание лога с нечисловым grade
 async def test_create_lesson_log_with_non_numeric_grade_returns_422(created_solo_student, authorized_client):
     student_id = created_solo_student["id"]
-    response = await authorized_client.post("/lesson_logs/", json={
+    response = await authorized_client.post("/lesson-logs/", json={
         "student_id": student_id,
         "grade": "asd",
         "lesson_log_date": "2026-09-22"
@@ -261,7 +261,7 @@ async def test_create_lesson_log_with_non_numeric_grade_returns_422(created_solo
 
 # Создание лога без авторизации
 async def test_create_lesson_log_without_auth_returns_401(client):
-    response = await client.post("/lesson_logs/", json={
+    response = await client.post("/lesson-logs/", json={
         "student_id": 1,
         "lesson_log_date": "2026-09-22"
     })
@@ -270,7 +270,7 @@ async def test_create_lesson_log_without_auth_returns_401(client):
 
 # Получение списка всех логов — непустой список
 async def test_get_lesson_logs_returns_200(created_solo_student_and_lesson_log, authorized_client):
-    response = await authorized_client.get("/lesson_logs/")
+    response = await authorized_client.get("/lesson-logs/")
 
     assert response.status_code == 200, response.text
 
@@ -279,7 +279,7 @@ async def test_get_lesson_logs_returns_200(created_solo_student_and_lesson_log, 
 
 # Получение списка логов, когда их ещё нет — пустой список
 async def test_get_lesson_logs_empty_returns_200(authorized_client):
-    response = await authorized_client.get("/lesson_logs/")
+    response = await authorized_client.get("/lesson-logs/")
 
     assert response.status_code == 200, response.text
 
@@ -288,31 +288,31 @@ async def test_get_lesson_logs_empty_returns_200(authorized_client):
 
 # Получение списка логов без авторизации
 async def test_get_lesson_logs_without_auth_returns_401(client):
-    response = await client.get("/lesson_logs/")
+    response = await client.get("/lesson-logs/")
     assert response.status_code == 401, response.text
 
 # Получение существующего лога по id
 async def test_get_lesson_log_by_id_returns_200(created_solo_student_and_lesson_log, authorized_client):
     lesson_log_id = created_solo_student_and_lesson_log["id"]
-    response = await authorized_client.get(f"/lesson_logs/{lesson_log_id}")
+    response = await authorized_client.get(f"/lesson-logs/{lesson_log_id}")
 
     assert response.status_code == 200, response.text
 
 # Получение лога по несуществующему id
 async def test_get_lesson_log_by_nonexistent_id_returns_404(authorized_client):
-    response = await authorized_client.get("/lesson_logs/1")
+    response = await authorized_client.get("/lesson-logs/1")
 
     assert response.status_code == 404, response.text
 
 # Получение лога по нечисловому id
 async def test_get_lesson_log_by_non_numeric_id_returns_422(authorized_client):
-    response = await authorized_client.get("/lesson_logs/asd")
+    response = await authorized_client.get("/lesson-logs/asd")
 
     assert response.status_code == 422, response.text
 
 # Получение лога по id без авторизации
 async def test_get_lesson_log_by_id_without_auth_returns_401(client):
-    response = await client.get("/lesson_logs/1")
+    response = await client.get("/lesson-logs/1")
 
     assert response.status_code == 401, response.text
 
@@ -320,7 +320,7 @@ async def test_get_lesson_log_by_id_without_auth_returns_401(client):
 async def test_update_lesson_log_single_field_returns_200(created_solo_student_and_lesson_log, authorized_client):
     lesson_log_id = created_solo_student_and_lesson_log["id"]
 
-    response = await authorized_client.patch(f"/lesson_logs/{lesson_log_id}", json={
+    response = await authorized_client.patch(f"/lesson-logs/{lesson_log_id}", json={
         "lesson_log_date": "2025-09-22"
     })
 
@@ -333,7 +333,7 @@ async def test_update_lesson_log_single_field_returns_200(created_solo_student_a
 async def test_update_lesson_log_multiple_fields_returns_200(created_solo_student_and_lesson_log, authorized_client):
     lesson_log_id = created_solo_student_and_lesson_log["id"]
 
-    response = await authorized_client.patch(f"/lesson_logs/{lesson_log_id}", json={
+    response = await authorized_client.patch(f"/lesson-logs/{lesson_log_id}", json={
         "lesson_log_date": "2025-09-22",
         "topic": "Интегралы"
     })
@@ -348,19 +348,19 @@ async def test_update_lesson_log_multiple_fields_returns_200(created_solo_studen
 async def test_update_lesson_log_with_empty_body_returns_200(created_solo_student_and_lesson_log, authorized_client):
     lesson_log_id = created_solo_student_and_lesson_log["id"]
 
-    response = await authorized_client.patch(f"/lesson_logs/{lesson_log_id}", json={})
+    response = await authorized_client.patch(f"/lesson-logs/{lesson_log_id}", json={})
 
     assert response.status_code == 200, response.text
 
 # Обновление несуществующего лога
 async def test_update_nonexistent_lesson_log_returns_404(authorized_client):
-    response = await authorized_client.patch("/lesson_logs/2", json={})
+    response = await authorized_client.patch("/lesson-logs/2", json={})
 
     assert response.status_code == 404, response.text
 
 # Обновление с нечисловым id лога
 async def test_update_lesson_log_with_non_numeric_id_returns_422(authorized_client):
-    response = await authorized_client.patch("/lesson_logs/asd")
+    response = await authorized_client.patch("/lesson-logs/asd")
 
     assert response.status_code == 422, response.text
 
@@ -369,7 +369,7 @@ async def test_update_lesson_log_with_nonexistent_student_returns_404(created_so
     lesson_log_id = created_solo_student_and_lesson_log["id"]
     student_id = created_solo_student_and_lesson_log["student_id"]
 
-    response = await authorized_client.patch(f"/lesson_logs/{lesson_log_id}", json={
+    response = await authorized_client.patch(f"/lesson-logs/{lesson_log_id}", json={
         "student_id": student_id - 1
     })
 
@@ -379,7 +379,7 @@ async def test_update_lesson_log_with_nonexistent_student_returns_404(created_so
 async def test_update_lesson_log_with_nonexistent_lesson_returns_404(created_solo_student_and_lesson_log, authorized_client):
     lesson_log_id = created_solo_student_and_lesson_log["id"]
     
-    response = await authorized_client.patch(f"/lesson_logs/{lesson_log_id}", json={
+    response = await authorized_client.patch(f"/lesson-logs/{lesson_log_id}", json={
         "lesson_id": 1
     })
 
@@ -404,7 +404,7 @@ async def test_update_lesson_log_with_foreign_lesson_returns_409(created_solo_st
     })
     lesson_id_for_second_student = second_lesson_response.json()["id"]
 
-    response = await authorized_client.patch(f"/lesson_logs/{first_student_lesson_log_id}", json={
+    response = await authorized_client.patch(f"/lesson-logs/{first_student_lesson_log_id}", json={
         "lesson_id": lesson_id_for_second_student
     })
 
@@ -415,7 +415,7 @@ async def test_update_lesson_log_unlink_lesson_returns_200(created_solo_student_
     student_id = created_solo_student_and_lesson["student_id"]
     lesson_id = created_solo_student_and_lesson["id"]
 
-    post_response = await authorized_client.post("/lesson_logs/", json={
+    post_response = await authorized_client.post("/lesson-logs/", json={
         "student_id": student_id,
         "lesson_id": lesson_id,
         "lesson_log_date": "2026-09-22"
@@ -423,7 +423,7 @@ async def test_update_lesson_log_unlink_lesson_returns_200(created_solo_student_
     assert post_response.status_code == 201, post_response.text
     lesson_log_id = post_response.json()["id"]
 
-    patch_response = await authorized_client.patch(f"/lesson_logs/{lesson_log_id}", json={
+    patch_response = await authorized_client.patch(f"/lesson-logs/{lesson_log_id}", json={
         "lesson_id": None
     })
     assert patch_response.status_code == 200, patch_response.text
@@ -433,7 +433,7 @@ async def test_update_lesson_log_change_student_and_unlink_lesson_returns_200(cr
     student_id = created_solo_student_and_lesson["student_id"]
     lesson_id = created_solo_student_and_lesson["id"]
 
-    post_response = await authorized_client.post("/lesson_logs/", json={
+    post_response = await authorized_client.post("/lesson-logs/", json={
         "student_id": student_id,
         "lesson_id": lesson_id,
         "lesson_log_date": "2026-09-22"
@@ -448,7 +448,7 @@ async def test_update_lesson_log_change_student_and_unlink_lesson_returns_200(cr
     })
     second_student_id = second_student_response.json()["id"]
 
-    response = await authorized_client.patch(f"/lesson_logs/{lesson_log_id}", json={
+    response = await authorized_client.patch(f"/lesson-logs/{lesson_log_id}", json={
         "student_id": second_student_id,
         "lesson_id": None
     })
@@ -458,7 +458,7 @@ async def test_update_lesson_log_change_student_and_unlink_lesson_returns_200(cr
 # Обновление topic на пустую строку
 async def test_update_lesson_log_with_empty_topic_returns_422(created_solo_student_and_lesson_log, authorized_client):
     lesson_log_id = created_solo_student_and_lesson_log["id"]
-    response = await authorized_client.patch(f"/lesson_logs/{lesson_log_id}", json={
+    response = await authorized_client.patch(f"/lesson-logs/{lesson_log_id}", json={
         "topic": ""
     })
 
@@ -468,7 +468,7 @@ async def test_update_lesson_log_with_empty_topic_returns_422(created_solo_stude
 async def test_update_lesson_log_with_too_long_topic_returns_422(created_solo_student_and_lesson_log, authorized_client):
     topic = "a" * 1001
     lesson_log_id = created_solo_student_and_lesson_log["id"]
-    response = await authorized_client.patch(f"/lesson_logs/{lesson_log_id}", json={
+    response = await authorized_client.patch(f"/lesson-logs/{lesson_log_id}", json={
         "topic": topic
     })
 
@@ -478,7 +478,7 @@ async def test_update_lesson_log_with_too_long_topic_returns_422(created_solo_st
 @pytest.mark.parametrize("grade", [1, 6])
 async def test_update_lesson_log_with_invalid_grade_returns_422(grade, created_solo_student_and_lesson_log, authorized_client):
     lesson_log_id = created_solo_student_and_lesson_log["id"]
-    response = await authorized_client.patch(f"/lesson_logs/{lesson_log_id}", json={
+    response = await authorized_client.patch(f"/lesson-logs/{lesson_log_id}", json={
         "grade": grade
     })
 
@@ -488,7 +488,7 @@ async def test_update_lesson_log_with_invalid_grade_returns_422(grade, created_s
 @pytest.mark.parametrize("grade", [2, 3, 4, 5])
 async def test_update_lesson_log_with_boundary_grade_returns_200(grade, created_solo_student_and_lesson_log, authorized_client):
     lesson_log_id = created_solo_student_and_lesson_log["id"]
-    response = await authorized_client.patch(f"/lesson_logs/{lesson_log_id}", json={
+    response = await authorized_client.patch(f"/lesson-logs/{lesson_log_id}", json={
         "grade": grade
     })
 
@@ -498,7 +498,7 @@ async def test_update_lesson_log_with_boundary_grade_returns_200(grade, created_
 async def test_update_lesson_log_with_too_long_textbook_returns_422(created_solo_student_and_lesson_log, authorized_client):
     textbook = "a" * 256
     lesson_log_id = created_solo_student_and_lesson_log["id"]
-    response = await authorized_client.patch(f"/lesson_logs/{lesson_log_id}", json={
+    response = await authorized_client.patch(f"/lesson-logs/{lesson_log_id}", json={
         "textbook": textbook
     })
 
@@ -506,34 +506,34 @@ async def test_update_lesson_log_with_too_long_textbook_returns_422(created_solo
 
 # Обновление лога без авторизации
 async def test_update_lesson_log_without_auth_returns_401(client):
-    response = await client.patch("/lesson_logs/1", json={})
+    response = await client.patch("/lesson-logs/1", json={})
 
     assert response.status_code == 401, response.text
 
 # Удаление лога — успех, затем повторный запрос подтверждает, что лога больше нет
 async def test_delete_lesson_log_returns_204_and_then_404(created_solo_student_and_lesson_log, authorized_client):
     lesson_log_id = created_solo_student_and_lesson_log["id"]
-    delete_response = await authorized_client.delete(f"/lesson_logs/{lesson_log_id}")
+    delete_response = await authorized_client.delete(f"/lesson-logs/{lesson_log_id}")
 
     assert delete_response.status_code == 204, delete_response.text
 
-    get_response = await authorized_client.get(f"/lesson_logs/{lesson_log_id}")
+    get_response = await authorized_client.get(f"/lesson-logs/{lesson_log_id}")
 
     assert get_response.status_code == 404, get_response.text
 
 # Удаление несуществующего лога
 async def test_delete_nonexistent_lesson_log_returns_404(authorized_client):
-    response = await authorized_client.delete("/lesson_logs/1")
+    response = await authorized_client.delete("/lesson-logs/1")
     assert response.status_code == 404, response.text
 
 # Удаление лога с нечисловым id
 async def test_delete_lesson_log_with_non_numeric_id_returns_422(authorized_client):
-    response = await authorized_client.delete("/lesson_logs/asd")
+    response = await authorized_client.delete("/lesson-logs/asd")
     assert response.status_code == 422, response.text
 
 # Удаление лога без авторизации
 async def test_delete_lesson_log_without_auth_returns_401(client):
-    response = await client.delete("/lesson_logs/1")
+    response = await client.delete("/lesson-logs/1")
     assert response.status_code == 401, response.text
 
 # GET /students/{id}/lesson-logs
@@ -573,8 +573,30 @@ async def test_get_lesson_logs_for_student_without_auth_returns_401(client):
 @pytest.mark.parametrize("field", ["lesson_log_date", "student_id"])
 async def test_update_lesson_log_with_null_required_field_returns_422(field, authorized_client, created_solo_student_and_lesson_log):
     lesson_log_id = created_solo_student_and_lesson_log["id"]
-    response = await authorized_client.patch(f"/lesson_logs/{lesson_log_id}", json={
+    response = await authorized_client.patch(f"/lesson-logs/{lesson_log_id}", json={
         field: None
     })
 
     assert response.status_code == 422, response.text
+
+
+async def test_delete_lesson_keeps_lesson_log_with_null_lesson_id(created_solo_student_and_lesson, authorized_client):
+    student_id = created_solo_student_and_lesson["student_id"]
+    lesson_id = created_solo_student_and_lesson["id"]
+    create_log_response = await authorized_client.post("/lesson-logs/", json={
+        "student_id": student_id,
+        "lesson_id": lesson_id,
+        "lesson_log_date": "2026-09-22"
+    })
+
+    assert create_log_response.status_code == 201, create_log_response.text
+
+    log_id = create_log_response.json()["id"]
+
+    delete_lesson_response = await authorized_client.delete(f"/lessons/{lesson_id}")
+    assert delete_lesson_response.status_code == 204, delete_lesson_response.text
+
+    get_log_response = await authorized_client.get(f"/lesson-logs/{log_id}")
+    assert get_log_response.status_code == 200, get_log_response.text
+    assert get_log_response.json()["lesson_id"] is None
+    

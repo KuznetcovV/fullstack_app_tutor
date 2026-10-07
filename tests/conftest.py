@@ -15,13 +15,19 @@ from alembic import command
 from sqlalchemy.pool import NullPool
 
 from app.main import app
-from app.core.config import TEST_DATABASE_URL
+from app.core.config import DATABASE_URL, TEST_DATABASE_URL
 from app.dependencies.database import get_db
 from app.core.time import today
 
 
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+if TEST_DATABASE_URL is None:
+    raise RuntimeError("TEST_DATABASE_URL is not configured")
+
+if TEST_DATABASE_URL == DATABASE_URL:
+    raise RuntimeError("TEST_DATABASE_URL must differ from DATABASE_URL")
 
 #фикстура для накатывания всех миграций до последней на тестовую бд
 @pytest.fixture(scope="session")
@@ -207,7 +213,7 @@ async def created_many_students_many_lessons(created_many_students, authorized_c
 #Создание студента и одной записи о занятии
 @pytest_asyncio.fixture
 async def created_solo_student_and_lesson_log(created_solo_student, authorized_client):
-    response = await authorized_client.post("/lesson_logs/", json={
+    response = await authorized_client.post("/lesson-logs/", json={
         "student_id": created_solo_student["id"],
         "lesson_log_date": "2026-09-22"
     })
@@ -283,6 +289,7 @@ async def created_two_students_different_weekdays(created_many_students, authori
 
     return first_student, second_student
 
+#создание пользователя-админа
 @pytest_asyncio.fixture
 async def admin_client(db_session, client):
     user = User(
@@ -304,7 +311,7 @@ async def admin_client(db_session, client):
 
     return client
 
-
+#создание 4 пользователей
 @pytest_asyncio.fixture
 async def created_many_users(db_session):
     users = [
