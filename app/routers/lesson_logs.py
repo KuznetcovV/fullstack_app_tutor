@@ -5,10 +5,10 @@ from app.services.lesson_log import create_lesson_log_service, delete_lesson_log
 
 
 from app.schemas.lesson_log import LessonLogCreate, LessonLogResponse, LessonLogUpdate
-from app.dependencies.auth import get_current_user
+from app.dependencies.auth import get_current_teacher_or_admin
 
 
-router = APIRouter(prefix="/lesson-logs", tags=["Записи о занятиях"], dependencies=[Depends(get_current_user)])
+router = APIRouter(prefix="/lesson-logs", tags=["Записи о занятиях"], dependencies=[Depends(get_current_teacher_or_admin)])
 
 #Получение
 #Получение всех записей о занятиях
