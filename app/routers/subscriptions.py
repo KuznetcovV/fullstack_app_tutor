@@ -3,9 +3,9 @@ from app.services.subscription import create_subscription_service, delete_subscr
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.dependencies.database import get_db
 from app.schemas.subscription import SubscriptionResponse, SubscriptionCreate, SubscriptionUpdate
-from app.dependencies.auth import get_current_user
+from app.dependencies.auth import get_current_teacher_or_admin
 
-router = APIRouter(prefix="/subscriptions", tags=["Абонементы"], dependencies=[Depends(get_current_user)])
+router = APIRouter(prefix="/subscriptions", tags=["Абонементы"], dependencies=[Depends(get_current_teacher_or_admin)])
 
 #Получение абонементов с возможными фильтрами по оплате и/или активности
 @router.get("/",

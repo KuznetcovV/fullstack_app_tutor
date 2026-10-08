@@ -57,3 +57,14 @@ async def get_current_admin(
         )
 
     return current_user
+
+async def get_current_teacher_or_admin(
+        current_user: User = Depends(get_current_user)
+) -> User:
+    if current_user.role not in [UserRole.ADMIN, UserRole.TEACHER]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Недостаточно прав"
+        )
+
+    return current_user

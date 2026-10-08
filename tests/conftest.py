@@ -75,8 +75,8 @@ async def authorized_client(client):
 
 #Создание студента
 @pytest_asyncio.fixture
-async def created_solo_student(authorized_client):
-    response = await authorized_client.post("/students/", json={
+async def created_solo_student(teacher_client):
+    response = await teacher_client.post("/students/", json={
         "first_name": "Тестовый",
         "last_name": "Студент",
         "number_of_class": 5,
@@ -91,8 +91,8 @@ async def created_solo_student(authorized_client):
 
 #Создание трех студентов
 @pytest_asyncio.fixture
-async def created_many_students(authorized_client):
-    first_sutdent = await authorized_client.post("/students/", json={
+async def created_many_students(teacher_client):
+    first_sutdent = await teacher_client.post("/students/", json={
         "first_name": "Иван",
         "last_name": "Петров",
         "number_of_class": 9,
@@ -105,7 +105,7 @@ async def created_many_students(authorized_client):
 
     assert first_sutdent.status_code == 201, f"Не удалось создать студента для фикстуры: {first_sutdent.text}"
     
-    second_student = await authorized_client.post("/students/", json={
+    second_student = await teacher_client.post("/students/", json={
         "first_name": "Мария",
         "last_name": "Сидорова",
         "number_of_class": 10,
@@ -118,7 +118,7 @@ async def created_many_students(authorized_client):
 
     assert second_student.status_code == 201, f"Не удалось создать студента для фикстуры: {second_student.text}"
 
-    third_student = await authorized_client.post("/students/", json={
+    third_student = await teacher_client.post("/students/", json={
         "first_name": "Дмитрий",
         "last_name": "Иванов",
         "number_of_class": 10,
@@ -137,8 +137,8 @@ async def created_many_students(authorized_client):
 
 #Создание одного студента с одним занятием в расписании
 @pytest_asyncio.fixture
-async def created_solo_student_and_lesson(created_solo_student, authorized_client):
-    response = await authorized_client.post("/lessons/", json={
+async def created_solo_student_and_lesson(created_solo_student, teacher_client):
+    response = await teacher_client.post("/lessons/", json={
         "student_id": created_solo_student["id"],
         "day": 1,
         "time_start": "12:00:00",
@@ -149,8 +149,8 @@ async def created_solo_student_and_lesson(created_solo_student, authorized_clien
 
 #Создание одного студента с тремя занятиями в расписании
 @pytest_asyncio.fixture
-async def created_solo_student_and_many_lessons(created_solo_student, authorized_client):
-    first_lesson = await authorized_client.post("/lessons/", json={
+async def created_solo_student_and_many_lessons(created_solo_student, teacher_client):
+    first_lesson = await teacher_client.post("/lessons/", json={
         "student_id": created_solo_student["id"],
         "day": 1,
         "time_start": "12:00:00",
@@ -158,7 +158,7 @@ async def created_solo_student_and_many_lessons(created_solo_student, authorized
     })
     assert first_lesson.status_code == 201, f"Не удалось создать занятие для фикстуры: {first_lesson.text}"
 
-    second_lesson = await authorized_client.post("/lessons/", json={
+    second_lesson = await teacher_client.post("/lessons/", json={
         "student_id": created_solo_student["id"],
         "day": 3,
         "time_start": "12:00:00",
@@ -167,7 +167,7 @@ async def created_solo_student_and_many_lessons(created_solo_student, authorized
 
     assert second_lesson.status_code == 201, f"Не удалось создать занятие для фикстуры: {second_lesson.text}"
 
-    third_lesson = await authorized_client.post("/lessons/", json={
+    third_lesson = await teacher_client.post("/lessons/", json={
         "student_id": created_solo_student["id"],
         "day": 5,
         "time_start": "12:00:00",
@@ -186,7 +186,7 @@ STUDENT_TIME_SLOTS = [
 ]
 #Создание трех студентов. У каждого по 3 занятия
 @pytest_asyncio.fixture
-async def created_many_students_many_lessons(created_many_students, authorized_client):
+async def created_many_students_many_lessons(created_many_students, teacher_client):
 
     students_lessons = {}
 
@@ -194,7 +194,7 @@ async def created_many_students_many_lessons(created_many_students, authorized_c
         lessons = []
 
         for day in LESSON_DAYS:
-            response = await authorized_client.post("/lessons/", json={
+            response = await teacher_client.post("/lessons/", json={
                 "student_id": student["id"],
                 "day": day,
                 "time_start": time_start,
@@ -212,8 +212,8 @@ async def created_many_students_many_lessons(created_many_students, authorized_c
 
 #Создание студента и одной записи о занятии
 @pytest_asyncio.fixture
-async def created_solo_student_and_lesson_log(created_solo_student, authorized_client):
-    response = await authorized_client.post("/lesson-logs/", json={
+async def created_solo_student_and_lesson_log(created_solo_student, teacher_client):
+    response = await teacher_client.post("/lesson-logs/", json={
         "student_id": created_solo_student["id"],
         "lesson_log_date": "2026-09-22"
     })
@@ -223,10 +223,10 @@ async def created_solo_student_and_lesson_log(created_solo_student, authorized_c
 
 #Создание одного студента и одного абонемента
 @pytest_asyncio.fixture
-async def created_solo_student_many_lessons_and_subscription(created_solo_student_and_many_lessons, authorized_client):
+async def created_solo_student_many_lessons_and_subscription(created_solo_student_and_many_lessons, teacher_client):
     student_id = created_solo_student_and_many_lessons[0]["student_id"]
 
-    response = await authorized_client.post("/subscriptions/", json={
+    response = await teacher_client.post("/subscriptions/", json={
         "student_id": student_id,
         "start_date": "2026-09-01",
         "end_date": "2026-09-30",
@@ -240,13 +240,13 @@ async def created_solo_student_many_lessons_and_subscription(created_solo_studen
 
 #Создание одного студента, у которого три занятия и два абонемента
 @pytest_asyncio.fixture
-async def created_solo_student_many_lessons_and_many_subscriptions(created_solo_student_and_many_lessons, authorized_client):
+async def created_solo_student_many_lessons_and_many_subscriptions(created_solo_student_and_many_lessons, teacher_client):
     student_id = created_solo_student_and_many_lessons[0]["student_id"]
 
     start_date = (today() - timedelta(days=5)).isoformat()
     end_date = (today() + timedelta(days=5)).isoformat()
 
-    first_subscription = await authorized_client.post("/subscriptions/", json={
+    first_subscription = await teacher_client.post("/subscriptions/", json={
         "student_id": student_id,
         "start_date": "2026-08-01",
         "end_date": "2026-08-31",
@@ -255,7 +255,7 @@ async def created_solo_student_many_lessons_and_many_subscriptions(created_solo_
     })
     assert first_subscription.status_code == 201, first_subscription.text
 
-    second_subscription = await authorized_client.post("/subscriptions/", json={
+    second_subscription = await teacher_client.post("/subscriptions/", json={
         "student_id": student_id,
         "start_date": start_date,
         "end_date": end_date,
@@ -268,10 +268,10 @@ async def created_solo_student_many_lessons_and_many_subscriptions(created_solo_
 
 #Создает двух учеников, у первого 5 занятий в сентябре 2026, у второго 4
 @pytest_asyncio.fixture
-async def created_two_students_different_weekdays(created_many_students, authorized_client):
+async def created_two_students_different_weekdays(created_many_students, teacher_client):
     first_student, second_student, *_ = created_many_students
 
-    first_lesson = await authorized_client.post("/lessons/", json={
+    first_lesson = await teacher_client.post("/lessons/", json={
         "student_id": first_student["id"],
         "day": 2,
         "time_start": "12:00:00",
@@ -279,7 +279,7 @@ async def created_two_students_different_weekdays(created_many_students, authori
     })
     assert first_lesson.status_code == 201, first_lesson.text
 
-    second_lesson = await authorized_client.post("/lessons/", json={
+    second_lesson = await teacher_client.post("/lessons/", json={
         "student_id": second_student["id"],
         "day": 3,
         "time_start": "12:00:00",
@@ -288,28 +288,6 @@ async def created_two_students_different_weekdays(created_many_students, authori
     assert second_lesson.status_code == 201, second_lesson.text
 
     return first_student, second_student
-
-#создание пользователя-админа
-@pytest_asyncio.fixture
-async def admin_client(db_session, client):
-    user = User(
-            login="admin",
-            email="admin@test.ru",
-            password_hash=hash_password("admin123"),
-            role=UserRole.ADMIN,
-            refresh_token_hash=None
-    )
-
-    db_session.add(user)
-    await db_session.commit()
-    await db_session.refresh(user)
-
-    tokens = await generate_tokens(db_session, user)
-    access_token = tokens.access_token
-
-    client.headers["Authorization"] = f"Bearer {access_token}"
-
-    return client
 
 #создание 4 пользователей
 @pytest_asyncio.fixture
@@ -364,3 +342,71 @@ async def created_many_users(db_session):
 
 
     return users
+
+#создание пользователя-админа
+@pytest_asyncio.fixture
+async def admin_client(db_session, client):
+    user = User(
+            login="admin",
+            email="admin@test.ru",
+            password_hash=hash_password("admin123"),
+            role=UserRole.ADMIN,
+            refresh_token_hash=None
+    )
+
+    db_session.add(user)
+    await db_session.commit()
+    await db_session.refresh(user)
+
+    tokens = await generate_tokens(db_session, user)
+    access_token = tokens.access_token
+
+    client.headers["Authorization"] = f"Bearer {access_token}"
+
+    return client
+
+#создание пользователя-учителя-репетитора
+@pytest_asyncio.fixture
+async def teacher_client(db_session, client):
+
+    user = User(
+            login="teacher",
+            email="teacher@test.ru",
+            password_hash=hash_password("teacher123"),
+            role=UserRole.TEACHER,
+            refresh_token_hash=None
+    )
+
+    db_session.add(user)
+    await db_session.commit()
+    await db_session.refresh(user)
+
+    tokens = await generate_tokens(db_session, user)
+    access_token = tokens.access_token
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test", headers={"Authorization": f"Bearer {access_token}"}) as ac:
+        yield ac
+
+#создание пользователя-ученика
+@pytest_asyncio.fixture
+async def student_client(db_session, client):
+
+    user = User(
+            login="student",
+            email="student@test.ru",
+            password_hash=hash_password("student123"),
+            role=UserRole.STUDENT,
+            refresh_token_hash=None
+    )
+
+    db_session.add(user)
+    await db_session.commit()
+    await db_session.refresh(user)
+
+    tokens = await generate_tokens(db_session, user)
+    access_token = tokens.access_token
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test", headers={"Authorization": f"Bearer {access_token}"}) as ac:
+        yield ac

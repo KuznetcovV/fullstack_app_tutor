@@ -24,9 +24,9 @@ UPDATED_USER = {
 }
 
 #Успешное создания студента
-async def test_create_student(authorized_client):
+async def test_create_student(teacher_client):
     user = DEFAULT_USER.copy()
-    response = await authorized_client.post("/students/", json=user)
+    response = await teacher_client.post("/students/", json=user)
 
     assert response.status_code == 201, response.text
 
@@ -51,10 +51,10 @@ async def test_create_student(authorized_client):
     "59969133520",
     "+59969133520"
 ])
-async def test_create_student_with_invalid_length_phone(phone, authorized_client):
+async def test_create_student_with_invalid_length_phone(phone, teacher_client):
     user = DEFAULT_USER.copy()
     user["phone"] = phone
-    response = await authorized_client.post("/students/", json=user)
+    response = await teacher_client.post("/students/", json=user)
 
     assert response.status_code == 422, response.text
 
@@ -62,10 +62,10 @@ async def test_create_student_with_invalid_length_phone(phone, authorized_client
 @pytest.mark.parametrize("number", [
     12, "!", "f", "F", 0, -12, 2.3
 ])
-async def test_create_student_with_invalid_class_number(number, authorized_client):
+async def test_create_student_with_invalid_class_number(number, teacher_client):
     user = DEFAULT_USER.copy()
     user["number_of_class"] = number
-    response = await authorized_client.post("/students/", json=user)
+    response = await teacher_client.post("/students/", json=user)
 
     assert response.status_code == 422, response.text
 
@@ -78,23 +78,23 @@ async def test_create_student_with_invalid_class_number(number, authorized_clien
 async def test_create_student_with_empty_required_vals(first_name,
                                                        last_name,
                                                        number_of_class,
-                                                       authorized_client):
+                                                       teacher_client):
     user = DEFAULT_USER.copy()
     user["first_name"] = first_name
     user["last_name"] = last_name
     user["number_of_class"] = number_of_class
-    response = await authorized_client.post("/students/", json=user)
+    response = await teacher_client.post("/students/", json=user)
 
     assert response.status_code == 422, response.text
 
 #Проверка корректного обновления
-async def test_update_student_with_valid_data_returns_200(created_solo_student, authorized_client):
+async def test_update_student_with_valid_data_returns_200(created_solo_student, teacher_client):
 
     id = created_solo_student["id"]
 
     updated_user = UPDATED_USER.copy()
 
-    update_response = await authorized_client.patch(f"/students/{id}", json=updated_user)
+    update_response = await teacher_client.patch(f"/students/{id}", json=updated_user)
 
     updated_body = update_response.json()
 
@@ -111,144 +111,144 @@ async def test_update_student_with_valid_data_returns_200(created_solo_student, 
     assert updated_body["is_active"] is updated_user["is_active"]
 
 #Проверка корректного удаления
-async def test_delete_student_returns_204(created_solo_student, authorized_client):
+async def test_delete_student_returns_204(created_solo_student, teacher_client):
     student_id = created_solo_student["id"]
 
-    delete_response = await authorized_client.delete(f"/students/{student_id}")
+    delete_response = await teacher_client.delete(f"/students/{student_id}")
     assert delete_response.status_code == 204, delete_response.text
 
-    get_response = await authorized_client.get(f"/students/{student_id}")
+    get_response = await teacher_client.get(f"/students/{student_id}")
     assert get_response.status_code == 404, get_response.text
 
 #Проверка передачи айди при удалении, который не является числом
 @pytest.mark.parametrize("id", ["f,", "F", "@"])
-async def test_delete_student_with_non_numeric_id_returns_422(id, authorized_client):
-    delete_response = await authorized_client.delete(f"/students/{id}")
+async def test_delete_student_with_non_numeric_id_returns_422(id, teacher_client):
+    delete_response = await teacher_client.delete(f"/students/{id}")
     assert delete_response.status_code == 422, delete_response.text
 
 #Передача невозможных числовых значений id при удалении
 @pytest.mark.parametrize("id", [0, -1])
-async def test_delete_nonexistent_student_returns_404(id, authorized_client):
-    delete_response = await authorized_client.delete(f"/students/{id}")
+async def test_delete_nonexistent_student_returns_404(id, teacher_client):
+    delete_response = await teacher_client.delete(f"/students/{id}")
     assert delete_response.status_code == 404, delete_response.text
 
 #Передача пустого поля id при удалении
-async def test_delete_student_with_empty_id_hits_collection_route(authorized_client):
-    delete_response = await authorized_client.delete("/students/")
+async def test_delete_student_with_empty_id_hits_collection_route(teacher_client):
+    delete_response = await teacher_client.delete("/students/")
     assert delete_response.status_code == 405, delete_response.text
 
 #Проверка получения ученика по его id
-async def test_get_student_by_id_returns_200(created_solo_student, authorized_client):
+async def test_get_student_by_id_returns_200(created_solo_student, teacher_client):
     student_id = created_solo_student["id"]
 
-    get_response = await authorized_client.get(f"/students/{student_id}")
+    get_response = await teacher_client.get(f"/students/{student_id}")
     assert get_response.status_code == 200
 
 #Проверка успешного получения списка всех студентов без фильтров
-async def test_get_all_students(created_solo_student, authorized_client):
-    second_student = await authorized_client.post("/students/", json=DEFAULT_USER)
-    third_student = await authorized_client.post("/students/", json=UPDATED_USER)
+async def test_get_all_students(created_solo_student, teacher_client):
+    second_student = await teacher_client.post("/students/", json=DEFAULT_USER)
+    third_student = await teacher_client.post("/students/", json=UPDATED_USER)
 
     assert second_student.status_code == 201, second_student.text
     assert third_student.status_code == 201, third_student.text
 
-    response = await authorized_client.get("/students/")
+    response = await teacher_client.get("/students/")
     assert response.status_code == 200
     body = response.json()
     assert isinstance(body, list)
     assert len(body) == 3
 
 #проверка успешного получения списка студентов с фильтром по классу
-async def test_get_students_with_filter_by_number_of_class(created_many_students, authorized_client):
-    response = await authorized_client.get("/students/", params={"number_of_class": 10})
+async def test_get_students_with_filter_by_number_of_class(created_many_students, teacher_client):
+    response = await teacher_client.get("/students/", params={"number_of_class": 10})
     assert response.status_code == 200
     body = response.json()
     assert len(body) == 2
     assert all(el["number_of_class"] == 10 for el in body)
 
 #проверка успешного получения списка студентов с фильтром по активности
-async def test_get_students_with_filter_by_active(created_many_students, authorized_client):
-    response = await authorized_client.get("/students/", params={"is_active": True})
+async def test_get_students_with_filter_by_active(created_many_students, teacher_client):
+    response = await teacher_client.get("/students/", params={"is_active": True})
     assert response.status_code == 200
     body = response.json()
     assert len(body) == 2
     assert all(el["is_active"] for el in body)
 
 #проверка успешного получения списка студентов с фильтрами по классу и активности
-async def test_get_students_with_number_of_class_and_active(created_many_students, authorized_client):
-    response = await authorized_client.get("/students/", params={"is_active": True, "number_of_class": 10})
+async def test_get_students_with_number_of_class_and_active(created_many_students, teacher_client):
+    response = await teacher_client.get("/students/", params={"is_active": True, "number_of_class": 10})
     assert response.status_code == 200
     body = response.json()
     assert len(body) == 1
     assert all(el["is_active"] and el["number_of_class"] == 10 for el in body)
 
 #Поиск по совпадению в имени
-async def test_search_students_by_first_name(created_many_students, authorized_client):
-    response = await authorized_client.get("/students/search", params={"query": "Дми"})
+async def test_search_students_by_first_name(created_many_students, teacher_client):
+    response = await teacher_client.get("/students/search", params={"query": "Дми"})
     assert response.status_code == 200
     body = response.json()
     assert len(body) == 1
     assert all("Дми" in el["first_name"] for el in body)
 
 #Поиск по совпадению в фамилии
-async def test_search_students_by_last_name(created_many_students, authorized_client):
-    response = await authorized_client.get("/students/search", params={"query": "Ивано"})
+async def test_search_students_by_last_name(created_many_students, teacher_client):
+    response = await teacher_client.get("/students/search", params={"query": "Ивано"})
     assert response.status_code == 200
     body = response.json()
     assert len(body) == 1
     assert all("Ивано" in el["last_name"] for el in body)
 
 #Поиск по полному имени (имя + фамилия через пробел)
-async def test_search_by_full_name(created_many_students, authorized_client):
-    response = await authorized_client.get("/students/search", params={"query": "Дмитрий Иванов"})
+async def test_search_by_full_name(created_many_students, teacher_client):
+    response = await teacher_client.get("/students/search", params={"query": "Дмитрий Иванов"})
     assert response.status_code == 200
     body = response.json()
     assert len(body) == 1
     assert all("Дмитрий" in el["first_name"] and "Иванов" in el["last_name"] for el in body)
 
 #Регистронезависимый поиск 
-async def test_search_case_insensitive(created_many_students, authorized_client):
-    response = await authorized_client.get("/students/search", params={"query": "дмитрий"})
+async def test_search_case_insensitive(created_many_students, teacher_client):
+    response = await teacher_client.get("/students/search", params={"query": "дмитрий"})
     assert response.status_code == 200
     body = response.json()
     assert len(body) == 1
     assert all("Дмитрий" in el["first_name"] for el in body)
 
-    response = await authorized_client.get("/students/search", params={"query": "иванов"})
+    response = await teacher_client.get("/students/search", params={"query": "иванов"})
     assert response.status_code == 200
     body = response.json()
     assert len(body) == 1
     assert all("Иванов" in el["last_name"] for el in body)
 
-    response = await authorized_client.get("/students/search", params={"query": "дмитрий иванов"})
+    response = await teacher_client.get("/students/search", params={"query": "дмитрий иванов"})
     assert response.status_code == 200
     body = response.json()
     assert len(body) == 1
     assert all("Дмитрий" in el["first_name"] and "Иванов" in el["last_name"] for el in body)
 
 #Частичное совпадение в середине слова, не только с начала
-async def test_search_in_middle(created_many_students, authorized_client):
-    response = await authorized_client.get("/students/search", params={"query": "итрий"})
+async def test_search_in_middle(created_many_students, teacher_client):
+    response = await teacher_client.get("/students/search", params={"query": "итрий"})
     assert response.status_code == 200
     body = response.json()
     assert len(body) == 1
     assert all("Дмитрий" in el["first_name"] for el in body)
 
 #Запрос, под который никто не подходит -> пустой список
-async def test_search_no_matches_returns_empty_list(created_many_students, authorized_client):
-    response = await authorized_client.get("/students/search", params={"query": "Стас"})
+async def test_search_no_matches_returns_empty_list(created_many_students, teacher_client):
+    response = await teacher_client.get("/students/search", params={"query": "Стас"})
     assert response.status_code == 200
     body = response.json()
     assert len(body) == 0
 
 #Поиск без параметра query вообще -> 422
-async def test_search_without_query_param_returns_422(authorized_client):
-    response = await authorized_client.get("/students/search")
+async def test_search_without_query_param_returns_422(teacher_client):
+    response = await teacher_client.get("/students/search")
     assert response.status_code == 422
 
 #Пустая строка в query -> возвращает всех, а не 422 и не пустой список
-async def test_search_with_empty_query_returns_all(created_many_students, authorized_client):
-    response = await authorized_client.get("/students/search", params={"query": ""})
+async def test_search_with_empty_query_returns_all(created_many_students, teacher_client):
+    response = await teacher_client.get("/students/search", params={"query": ""})
     assert response.status_code == 200
     body = response.json()
     assert len(body) == 3
@@ -263,35 +263,35 @@ async def test_search_without_auth_returns_401(client):
     ("", DEFAULT_USER["last_name"]),
     (DEFAULT_USER["first_name"], ""),
 ])
-async def test_create_student_with_empty_string_name(first_name, last_name, authorized_client):
+async def test_create_student_with_empty_string_name(first_name, last_name, teacher_client):
     user = DEFAULT_USER.copy()
     user["first_name"] = first_name
     user["last_name"] = last_name
-    response = await authorized_client.post("/students/", json=user)
+    response = await teacher_client.post("/students/", json=user)
 
     assert response.status_code == 422, response.text
 
 #Проверка превышения максимальной длины имени (>100 символов) -> 422
-async def test_create_student_with_too_long_first_name(authorized_client):
+async def test_create_student_with_too_long_first_name(teacher_client):
     user = DEFAULT_USER.copy()
     user["first_name"] = "А" * 101
-    response = await authorized_client.post("/students/", json=user)
+    response = await teacher_client.post("/students/", json=user)
 
     assert response.status_code == 422, response.text
 
 #Превышение максимальной длины фамилии (>100 символов) -> 422
-async def test_create_student_with_too_long_last_name(authorized_client):
+async def test_create_student_with_too_long_last_name(teacher_client):
     user = DEFAULT_USER.copy()
     user["last_name"] = "Б" * 101
-    response = await authorized_client.post("/students/", json=user)
+    response = await teacher_client.post("/students/", json=user)
 
     assert response.status_code == 422, response.text
 
 #Превышение максимальной длины комментария (>1000 символов) -> 422
-async def test_create_student_with_too_long_notes(authorized_client):
+async def test_create_student_with_too_long_notes(teacher_client):
     user = DEFAULT_USER.copy()
     user["notes"] = "текст " * 1000
-    response = await authorized_client.post("/students/", json=user)
+    response = await teacher_client.post("/students/", json=user)
 
     assert response.status_code == 422, response.text
 
@@ -304,49 +304,49 @@ async def test_create_student_with_too_long_notes(authorized_client):
     "59969133520",
     "+59969133520"
 ])
-async def test_create_student_with_invalid_parent_phone(parent_phone, authorized_client):
+async def test_create_student_with_invalid_parent_phone(parent_phone, teacher_client):
     user = DEFAULT_USER.copy()
     user["parent_phone"] = parent_phone
-    response = await authorized_client.post("/students/", json=user)
+    response = await teacher_client.post("/students/", json=user)
 
     assert response.status_code == 422, response.text
 
 #Обновление несуществующего студента -> 404
 @pytest.mark.parametrize("id", [0, -1, 999999])
-async def test_update_nonexistent_student_returns_404(id, authorized_client):
-    response = await authorized_client.patch(f"/students/{id}", json={"first_name": "Кто-то"})
+async def test_update_nonexistent_student_returns_404(id, teacher_client):
+    response = await teacher_client.patch(f"/students/{id}", json={"first_name": "Кто-то"})
     assert response.status_code == 404, response.text
 
 #Обновление с невалидным телефоном -> 422
-async def test_update_student_with_invalid_phone_returns_422(created_solo_student, authorized_client):
+async def test_update_student_with_invalid_phone_returns_422(created_solo_student, teacher_client):
     student_id = created_solo_student["id"]
-    response = await authorized_client.patch(
+    response = await teacher_client.patch(
         f"/students/{student_id}", json={"phone": "899691335"}
     )
     assert response.status_code == 422, response.text
 
 #Обновление с классом вне диапазона -> 422
 @pytest.mark.parametrize("number", [0, 12, -1])
-async def test_update_student_with_invalid_class_number_returns_422(number, created_solo_student, authorized_client):
+async def test_update_student_with_invalid_class_number_returns_422(number, created_solo_student, teacher_client):
     student_id = created_solo_student["id"]
-    response = await authorized_client.patch(
+    response = await teacher_client.patch(
         f"/students/{student_id}", json={"number_of_class": number}
     )
     assert response.status_code == 422, response.text
 
 #Обновление с пустой строкой в имени -> 422
-async def test_update_student_with_empty_first_name_returns_422(created_solo_student, authorized_client):
+async def test_update_student_with_empty_first_name_returns_422(created_solo_student, teacher_client):
     student_id = created_solo_student["id"]
-    response = await authorized_client.patch(
+    response = await teacher_client.patch(
         f"/students/{student_id}", json={"first_name": ""}
     )
     assert response.status_code == 422, response.text
 
 #Получение несуществующего студента -> 404
 @pytest.mark.parametrize("id", [0, -1, 999999])
-async def test_get_nonexistent_student_returns_404(id, authorized_client):
+async def test_get_nonexistent_student_returns_404(id, teacher_client):
 
-    response = await authorized_client.get(f"/students/{id}")
+    response = await teacher_client.get(f"/students/{id}")
     assert response.status_code == 404, response.text
 
 #Получение списка студентов без авторизации -> 401
@@ -356,8 +356,8 @@ async def test_get_all_students_without_auth_returns_401(client):
     assert response.status_code == 401, response.text
 
 #Получение студента по id с нечисловым id -> 422
-async def test_get_student_by_id_with_non_numeric_id_returns_422(authorized_client):
-    response = await authorized_client.get("/students/asd")
+async def test_get_student_by_id_with_non_numeric_id_returns_422(teacher_client):
+    response = await teacher_client.get("/students/asd")
 
     assert response.status_code == 422, response.text
 
@@ -374,8 +374,8 @@ async def test_create_student_without_auth_returns_401(client):
     assert response.status_code == 401, response.text
 
 #Обновление студента с нечисловым id -> 422
-async def test_update_student_with_non_numeric_id_returns_422(authorized_client):
-    response = await authorized_client.patch("/students/asd", json={})
+async def test_update_student_with_non_numeric_id_returns_422(teacher_client):
+    response = await teacher_client.patch("/students/asd", json={})
 
     assert response.status_code == 422, response.text
 
@@ -393,9 +393,9 @@ async def test_delete_student_without_auth_returns_401(client):
 
 #Обнуление обязательного поля в patch
 @pytest.mark.parametrize("field", ["first_name", "last_name", "number_of_class", "is_active"])
-async def test_update_student_with_null_required_field_returns_422(field, authorized_client, created_solo_student):
+async def test_update_student_with_null_required_field_returns_422(field, teacher_client, created_solo_student):
     student_id = created_solo_student["id"]
-    response = await authorized_client.patch(f"/students/{student_id}", json={
+    response = await teacher_client.patch(f"/students/{student_id}", json={
         field: None
     })
 

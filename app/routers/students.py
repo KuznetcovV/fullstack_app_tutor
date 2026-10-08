@@ -17,10 +17,10 @@ from app.services.student import (
     get_subscriptions_for_student_service,
     get_active_subscription_for_student_service
 )
-from app.dependencies.auth import get_current_user
+from app.dependencies.auth import get_current_teacher_or_admin
 
 
-router = APIRouter(prefix="/students", tags=["Ученики"], dependencies=[Depends(get_current_user)])
+router = APIRouter(prefix="/students", tags=["Ученики"], dependencies=[Depends(get_current_teacher_or_admin)])
 
 #Получение
 #Получение списка учеников с возможными фильтрами по классу и активности
