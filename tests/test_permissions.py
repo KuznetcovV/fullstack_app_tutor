@@ -40,3 +40,21 @@ async def test_admin_has_access_to_crm(method, url, admin_client):
 async def test_teacher_has_access_to_crm(method, url, teacher_client):
     response = await teacher_client.request(method, url)
     assert response.status_code != 403, response.text
+
+@pytest.mark.parametrize("role", ["teacher", "admin"])
+async def test_register_ignores_role_field_and_creates_student(role, client):
+    
+    response = await client.post("/auth/register", json={
+        "login": role,
+        "password": "strongpassword123",
+        "role": "teacher"
+    })
+
+    assert response.status_code == 200, response.text
+
+    body = response.json()
+    access_token = body["access_token"]
+
+    get_response = await client.get("/students/", headers={"Authorization": f"Bearer {access_token}"})
+
+    assert get_response.status_code == 403, get_response.text
