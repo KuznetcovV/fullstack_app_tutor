@@ -22,7 +22,7 @@ async def get_lessons_service(
     if day is not None:
         query = query.where(Lesson.day == day)
 
-    result = await db.execute(query)
+    result = await db.execute(query.order_by(Lesson.day, Lesson.time_start, Lesson.id))
     return result.scalars().all()
 
 #Получение урока по его id
@@ -33,7 +33,7 @@ async def get_lesson_by_id_service(db: AsyncSession, lesson_id: int) -> Lesson |
 async def get_today_lesson_service(db: AsyncSession) -> list[Lesson]:
 
     today_weekday = today().weekday()
-    result = await db.execute(select(Lesson).where(Lesson.day == today_weekday))
+    result = await db.execute(select(Lesson).where(Lesson.day == today_weekday).order_by(Lesson.time_start, Lesson.id))
     lessons = result.scalars().all()
     
     return lessons

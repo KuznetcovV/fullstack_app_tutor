@@ -36,7 +36,7 @@ async def get_students_service(
     if is_active is not None:
         query = query.where(Student.is_active == is_active)
 
-    result = await db.execute(query)
+    result = await db.execute(query.order_by(Student.id))
     students = result.scalars().all()
 
     return students
@@ -47,7 +47,7 @@ async def search_students_service(db: AsyncSession, query: str) -> list[Student]
                 Student.last_name.ilike(f"%{query}%"),
                 func.concat(
                     Student.first_name, " ", Student.last_name
-                ).ilike(f"%{query}%")))
+                ).ilike(f"%{query}%"))).order_by(Student.id)
     
     result = await db.execute(query)
     students = result.scalars().all()
@@ -65,7 +65,7 @@ async def get_lessons_for_student_service(db: AsyncSession, student_id: int) -> 
 
     await get_student_or_404(db=db, student_id=student_id)
     
-    query = select(Lesson).where(Lesson.student_id == student_id).order_by(Lesson.day).order_by(Lesson.time_start)
+    query = select(Lesson).where(Lesson.student_id == student_id).order_by(Lesson.day, Lesson.time_start)
 
     result = await db.execute(query)
 
@@ -81,7 +81,7 @@ async def get_lesson_logs_for_student_service(db: AsyncSession, student_id: int)
 
     await get_student_or_404(db=db, student_id=student_id)
     
-    query = select(LessonLog).where(LessonLog.student_id == student_id)
+    query = select(LessonLog).where(LessonLog.student_id == student_id).order_by(LessonLog.id)
     result = await db.execute(query)
     lesson_logs = result.scalars().all()
 
@@ -100,7 +100,7 @@ async def get_active_subscription_for_student_service(db: AsyncSession, student_
     query = select(Subscription).where(
         Subscription.student_id == student_id,
         Subscription.start_date <= today_date,
-        Subscription.end_date >= today_date)
+        Subscription.end_date >= today_date).order_by(Subscription.id)
     
     result = await db.execute(query)
     subscription = result.scalars().first()
@@ -115,7 +115,7 @@ async def get_subscriptions_for_student_service(db: AsyncSession, student_id: in
 
     await get_student_or_404(db=db, student_id=student_id)
     
-    query = select(Subscription).where(Subscription.student_id == student_id)
+    query = select(Subscription).where(Subscription.student_id == student_id).order_by(Subscription.id)
     result = await db.execute(query)
     subscriptions = result.scalars().all()
 

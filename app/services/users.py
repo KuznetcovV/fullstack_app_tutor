@@ -24,7 +24,7 @@ async def get_users_service(
     if role is not None:
         query = query.where(User.role == role)
 
-    result = await db.execute(query)
+    result = await db.execute(query.order_by(User.id))
     users = result.scalars().all()
 
     return users
