@@ -18,8 +18,9 @@ from app.services.helpers.lessons import get_lesson_or_404
 async def get_lesson_log_service(
         db: AsyncSession
 ) -> list[LessonLog]:
-    
-    query = await db.execute(select(LessonLog).order_by(LessonLog.id))
+
+    result = select(LessonLog).order_by(LessonLog.id)
+    query = await db.execute(result)
     lesson_logs = query.scalars().all()
 
     return lesson_logs
