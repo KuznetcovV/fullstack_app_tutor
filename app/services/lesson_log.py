@@ -19,7 +19,7 @@ async def get_lesson_log_service(
         db: AsyncSession
 ) -> list[LessonLog]:
     
-    query = await db.execute(select(LessonLog))
+    query = await db.execute(select(LessonLog).order_by(LessonLog.id))
     lesson_logs = query.scalars().all()
 
     return lesson_logs

@@ -49,7 +49,7 @@ async def get_subscriptions_service(
             Subscription.is_paid == is_paid
         )
     
-    result = await db.execute(query)
+    result = await db.execute(query.order_by(Subscription.id))
     subscriptions = result.scalars().all()
 
     return subscriptions
