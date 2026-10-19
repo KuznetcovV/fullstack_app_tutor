@@ -10,7 +10,7 @@ async def test_schedule_for_one_day_returns_lesson_of_that_weekday(teacher_clien
     })
     assert post_response.status_code == 201, post_response.text
 
-    response = await teacher_client.get("/schedule", params={"date_from": "2026-10-19"})
+    response = await teacher_client.get("/schedule/", params={"date_from": "2026-10-19"})
     assert response.status_code == 200, response.text
     body = response.json()
     assert len(body) == 1, response.text
