@@ -20,6 +20,9 @@ async def get_schedule_service(
     if date_to < date_from:
         raise ScheduleDateFromAfterDateTo()
 
+    if (date_to - date_from).days + 1 > 31:
+        raise ScheduleRangeTooLong()
+
     query = select(Lesson).order_by(Lesson.time_start, Lesson.id)
     result = await db.execute(query)
     all_lessons = result.scalars().all()
