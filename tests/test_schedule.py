@@ -187,3 +187,20 @@ async def test_schedule_with_max_allowed_range_returns_200(teacher_client):
     })
 
     assert response.status_code == 200
+
+async def test_schedule_with_invalid_date_format_returns_422(teacher_client):
+    response = await teacher_client.get("/schedule/", params={
+        "date_from": "asd"
+    })
+
+    assert response.status_code == 422
+
+async def test_schedule_without_date_from_returns_422(teacher_client):
+    response = await teacher_client.get("/schedule/")
+
+    assert response.status_code == 422
+
+async def test_schedule_without_auth_returns_401(client):
+    response = await client.get("/schedule/")
+
+    assert response.status_code == 401
