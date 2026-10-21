@@ -180,3 +180,10 @@ async def test_schedule_with_too_long_range_returns_422(teacher_client):
     })
 
     assert response.status_code == 422
+
+async def test_schedule_with_max_allowed_range_returns_200(teacher_client):
+    response = await teacher_client.get("/schedule/", params={
+        "date_from": "2026-10-01", "date_to": "2026-10-31"
+    })
+
+    assert response.status_code == 200
