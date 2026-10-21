@@ -154,3 +154,15 @@ async def test_schedule_returns_lessons_sorted_by_date_and_time(teacher_client, 
 
     assert get_body[0]["lesson_id"] == second_lesson_body["id"], get_response.text
     assert get_body[1]["lesson_id"] == first_lesson_body["id"], get_response.text
+
+async def test_schedule_includes_lessons_of_all_students(teacher_client, created_many_students_many_lessons):
+    students_ids = set(created_many_students_many_lessons.keys())
+    count_lessons = sum(len(item) for item in created_many_students_many_lessons.values())
+    response = await teacher_client.get("/schedule/", params={"date_from": "2026-10-19", "date_to": "2026-10-25"})
+    assert response.status_code == 200, response.text
+    body = response.json()
+
+    assert len(body) == count_lessons, response.text
+    students_ids_from_response = {item["student_id"] for item in body}
+
+    assert students_ids == students_ids_from_response
