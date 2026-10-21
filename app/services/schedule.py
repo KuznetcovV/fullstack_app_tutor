@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.lesson import Lesson
 from app.schemas.schedule import ScheduleResponse
+from app.exceptions.schedule import ScheduleRangeTooLong, ScheduleDateFromAfterDateTo
 
 async def get_schedule_service(
         date_from: date,
@@ -15,6 +16,9 @@ async def get_schedule_service(
 
     if date_to is None:
         date_to = date_from
+
+    if date_to < date_from:
+        raise ScheduleDateFromAfterDateTo()
 
     query = select(Lesson).order_by(Lesson.time_start, Lesson.id)
     result = await db.execute(query)
