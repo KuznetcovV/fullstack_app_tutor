@@ -147,7 +147,7 @@ async def created_solo_student_and_lesson(created_solo_student, teacher_client):
     assert response.status_code == 201, f"Не удалось создать занятие для фикстуры: {response.text}"
     return response.json()
 
-#Создание одного студента с тремя занятиями в расписании
+#Создание одного студента с тремя занятиями в расписании (вторник, четверг и суббота)
 @pytest_asyncio.fixture
 async def created_solo_student_and_many_lessons(created_solo_student, teacher_client):
     first_lesson = await teacher_client.post("/lessons/", json={

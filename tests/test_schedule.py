@@ -67,3 +67,30 @@ async def test_schedule_for_week_returns_each_lesson_on_its_weekday_date(teacher
     assert third_lesson_schedule["time_start"] == third_lesson["time_start"], response.text
     assert third_lesson_schedule["time_end"] == third_lesson["time_end"], response.text
 
+async def test_schedule_for_two_weeks_repeats_lesson_every_week(teacher_client, created_solo_student):
+
+    post_response = await teacher_client.post("/lessons/", json={
+        "student_id": created_solo_student["id"],
+        "day": 0,
+        "time_start": "12:00:00",
+        "time_end": "13:00:00"
+    })
+    assert post_response.status_code == 201, post_response.text
+
+    response = await teacher_client.get("/schedule/", params={"date_from": "2026-10-19", "date_to": "2026-11-01"})
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert len(body) == 2, response.text
+    first_lesson = body[0]
+    second_lesson = body[1]
+
+    assert first_lesson["lesson_date"] == "2026-10-19", response.text
+    assert first_lesson["lesson_id"] == post_response.json()["id"], response.text
+    assert first_lesson["time_start"] == "12:00:00", response.text
+    assert first_lesson["time_end"] == "13:00:00", response.text
+
+    assert second_lesson["lesson_date"] == "2026-10-26", response.text
+    assert second_lesson["lesson_id"] == post_response.json()["id"], response.text
+    assert second_lesson["time_start"] == "12:00:00", response.text
+    assert second_lesson["time_end"] == "13:00:00", response.text
+
