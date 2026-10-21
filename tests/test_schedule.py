@@ -125,3 +125,32 @@ async def test_schedule_returns_lessons_of_one_day_sorted_by_time(teacher_client
     assert get_body[1]["lesson_id"] == first_lesson_body["id"], get_response.text
 
 
+async def test_schedule_returns_lessons_sorted_by_date_and_time(teacher_client, created_solo_student):
+    first_post_response = await teacher_client.post("/lessons/", json={
+        "student_id": created_solo_student["id"],
+        "day": 1,
+        "time_start": "12:00:00",
+        "time_end": "13:00:00"
+    })
+    assert first_post_response.status_code == 201, first_post_response.text
+
+    first_lesson_body = first_post_response.json()
+
+    second_post_response = await teacher_client.post("/lessons/", json={
+        "student_id": created_solo_student["id"],
+        "day": 0,
+        "time_start": "14:00:00",
+        "time_end": "15:00:00"
+    })
+    assert second_post_response.status_code == 201, second_post_response.text
+
+    second_lesson_body = second_post_response.json()
+
+    get_response = await teacher_client.get("/schedule/", params={"date_from": "2026-10-19", "date_to": "2026-10-20"})
+    assert get_response.status_code == 200, get_response.text
+
+    get_body = get_response.json()
+    assert len(get_body) == 2, get_response.text
+
+    assert get_body[0]["lesson_id"] == second_lesson_body["id"], get_response.text
+    assert get_body[1]["lesson_id"] == first_lesson_body["id"], get_response.text
