@@ -166,3 +166,10 @@ async def test_schedule_includes_lessons_of_all_students(teacher_client, created
     students_ids_from_response = {item["student_id"] for item in body}
 
     assert students_ids == students_ids_from_response
+
+async def test_schedule_with_date_from_after_date_to_returns_422(teacher_client):
+    response = await teacher_client.get("/schedule/", params={
+        "date_from": "2026-10-21", "date_to": "2026-10-19"
+    })
+
+    assert response.status_code == 422
