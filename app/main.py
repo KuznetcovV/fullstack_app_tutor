@@ -6,6 +6,7 @@ from app.routers.subscriptions import router as subscriptions_router
 from app.routers.lesson_logs import router as lesson_logs_router
 from app.routers.auth import router as auth_router
 from app.routers.users import router as users_router
+from app.routers.schedule import router as schedule_router
 from app.core.config import FRONTEND_URL
 from app.core.handlers import app_exception_handler
 from app.core.exceptions import AppException
@@ -39,3 +40,4 @@ app.include_router(students_router)
 app.include_router(lessons_router)
 app.include_router(subscriptions_router)
 app.include_router(lesson_logs_router)
+app.include_router(schedule_router)
