@@ -16,7 +16,7 @@ async def get_schedule_service(
     if date_to is None:
         date_to = date_from
 
-    query = select(Lesson)
+    query = select(Lesson).order_by(Lesson.time_start, Lesson.id)
     result = await db.execute(query)
     all_lessons = result.scalars().all()
 
