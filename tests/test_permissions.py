@@ -23,7 +23,11 @@ CRM_ENDPOINTS = [
     ('post', '/subscriptions/'),
     ('patch', '/subscriptions/1'),
     ('delete', '/subscriptions/1'),
-    ('get', '/schedule/')
+    ('get', '/schedule/'),
+    ('get', '/cancelled-lessons/1'),
+    ('get', '/cancelled-lessons/'),
+    ('post', '/cancelled-lessons/'),
+    ('delete', '/cancelled-lessons/1'),
     ]
 
 
