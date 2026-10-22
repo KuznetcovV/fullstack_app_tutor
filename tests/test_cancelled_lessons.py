@@ -93,3 +93,9 @@ async def test_get_cancelled_lessons_filtered_by_lesson_id(created_lessons_and_c
     assert len(body) == 1, response.text
     assert body[0]["lesson_id"] == lesson_id
 
+async def test_get_cancelled_lesson_by_id_returns_200(created_lessons_and_cancelled_lessons, teacher_client):
+    expected = created_lessons_and_cancelled_lessons[0]
+    response = await teacher_client.get(f"/cancelled-lessons/{expected["id"]}")
+
+    assert response.status_code == 200, response.text
+    assert response.json() == expected
