@@ -410,3 +410,34 @@ async def student_client(db_session, client):
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test", headers={"Authorization": f"Bearer {access_token}"}) as ac:
         yield ac
+
+
+@pytest_asyncio.fixture
+async def created_lessons_and_cancelled_lessons(created_solo_student_and_many_lessons, teacher_client):
+    first_lesson_id = created_solo_student_and_many_lessons[0]["id"]
+    second_lesson_id = created_solo_student_and_many_lessons[1]["id"]
+    third_lesson_id = created_solo_student_and_many_lessons[2]["id"]
+
+    first_response = await teacher_client.post("/cancelled-lessons/", json={
+        "lesson_id": first_lesson_id,
+        "lesson_date": "2026-10-20"
+    })
+
+    assert first_response.status_code == 201, f"Не удалось создать запись отмены занятия. {first_response.text}"
+
+    second_response = await teacher_client.post("/cancelled-lessons/", json={
+        "lesson_id": second_lesson_id,
+        "lesson_date": "2026-10-22"
+    })
+
+    assert second_response.status_code == 201, f"Не удалось создать запись отмены занятия. {second_response.text}"
+
+    third_response = await teacher_client.post("/cancelled-lessons/", json={
+        "lesson_id": third_lesson_id,
+        "lesson_date": "2026-10-24"
+    })
+
+    assert third_response.status_code == 201, f"Не удалось создать запись отмены занятия. {third_response.text}"
+
+    return [first_response.json(), second_response.json(), third_response.json()]
+

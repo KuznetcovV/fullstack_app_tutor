@@ -55,3 +55,22 @@ async def test_create_duplicate_cancelled_lesson_returns_409(teacher_client, cre
 async def test_create_cancelled_lesson_without_required_fields_returns_422(payload, teacher_client):
     response = await teacher_client.post("/cancelled-lessons/", json=payload)
     assert response.status_code == 422, response.text
+
+async def test_create_cancelled_lesson_with_invalid_date_format_returns_422(teacher_client, created_solo_student_and_lesson):
+    lesson_id = created_solo_student_and_lesson["id"]
+    response = await teacher_client.post("/cancelled-lessons/", json={
+        "lesson_id": lesson_id,
+        "lesson_date": "20-2026-10"
+    })
+
+    assert response.status_code == 422, response.text
+
+
+async def test_get_cancelled_lessons_returns_list(created_lessons_and_cancelled_lessons, teacher_client):
+    expected_id = {item["id"] for item in created_lessons_and_cancelled_lessons}
+    response = await teacher_client.get("/cancelled-lessons/")
+    assert response.status_code == 200, response.text
+
+    body = response.json()
+    assert len(body) == 3
+    assert {item["id"] for item in body} == expected_id
