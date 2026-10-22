@@ -1,3 +1,5 @@
+import pytest
+
 async def test_create_cancelled_lesson_returns_201(teacher_client, created_solo_student_and_many_lessons):
     first_lesson_id = created_solo_student_and_many_lessons[0]["id"]
     response = await teacher_client.post("/cancelled-lessons/", json={
@@ -44,3 +46,12 @@ async def test_create_duplicate_cancelled_lesson_returns_409(teacher_client, cre
     })
 
     assert second_response.status_code == 409, second_response.text
+
+@pytest.mark.parametrize("payload", [
+    {},
+    {"lesson_id": 1},
+    {"lesson_date": "2026-10-20"}
+    ])
+async def test_create_cancelled_lesson_without_required_fields_returns_422(payload, teacher_client):
+    response = await teacher_client.post("/cancelled-lessons/", json=payload)
+    assert response.status_code == 422, response.text
