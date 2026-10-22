@@ -40,5 +40,6 @@ async def get_cancelled_lessons_service(db: AsyncSession, lesson_id: int | None 
     result = await db.execute(query.order_by(CancelledLesson.lesson_date, CancelledLesson.id))
     return result.scalars().all()
 
+
 async def get_cancelled_lesson_by_id_service(db: AsyncSession, cancelled_lesson_id: int) -> CancelledLesson:
     return await get_cancelled_lesson_or_404(db=db, cancelled_lesson_id=cancelled_lesson_id)

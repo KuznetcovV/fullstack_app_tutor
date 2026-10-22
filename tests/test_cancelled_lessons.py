@@ -104,4 +104,8 @@ async def test_get_cancelled_lesson_by_id_not_found_returns_404(teacher_client):
     response = await teacher_client.get("/cancelled-lessons/999")
     assert response.status_code == 404, response.text
 
-    
+async def test_delete_cancelled_lesson_returns_204(created_lessons_and_cancelled_lessons, teacher_client):
+    cancelled_lesson_id = created_lessons_and_cancelled_lessons[0]["id"]
+
+    response = await teacher_client.delete(f"/cancelled-lessons/{cancelled_lesson_id}")
+    assert response.status_code == 204, response.text
