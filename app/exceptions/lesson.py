@@ -22,5 +22,8 @@ class LessonDateWeekdayMismatch(AppException):
 
 class LessonAlreadyCancelled(AppException):
     status_code = 409
-    detail = "На эту дату занятие уже отменено"
-    
+    detail = "На эту дату занятие уже отменено."
+
+class CancelledLessonNotFound(AppException):
+    status_code = 404
+    detail = "Запись об отмененном занятии не найдена."
