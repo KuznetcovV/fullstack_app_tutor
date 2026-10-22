@@ -43,3 +43,9 @@ async def get_cancelled_lessons_service(db: AsyncSession, lesson_id: int | None 
 
 async def get_cancelled_lesson_by_id_service(db: AsyncSession, cancelled_lesson_id: int) -> CancelledLesson:
     return await get_cancelled_lesson_or_404(db=db, cancelled_lesson_id=cancelled_lesson_id)
+
+async def delete_cancelled_lesson_by_id_service(db: AsyncSession, cancelled_lesson_id: int) -> None:
+    cancelled_lesson = await get_cancelled_lesson_or_404(db=db, cancelled_lesson_id=cancelled_lesson_id)
+
+    await db.delete(cancelled_lesson)
+    await db.commit()
