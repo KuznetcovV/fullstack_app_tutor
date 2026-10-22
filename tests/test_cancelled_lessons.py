@@ -19,3 +19,12 @@ async def test_create_cancelled_lesson_for_nonexistent_lesson_returns_404(teache
     })
 
     assert response.status_code == 404, response.text
+
+async def test_create_cancelled_lesson_with_wrong_weekday_returns_422(teacher_client, created_solo_student_and_lesson):
+    lesson_id = created_solo_student_and_lesson["id"]
+    response = await teacher_client.post("/cancelled-lessons/", json={
+        "lesson_id": lesson_id,
+        "lesson_date": "2026-10-21"
+    })
+
+    assert response.status_code == 422, response.text
