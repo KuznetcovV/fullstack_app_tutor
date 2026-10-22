@@ -29,3 +29,9 @@ async def create_cancelled_lesson_service(db: AsyncSession,
     await db.refresh(db_cancelled_lesson)
 
     return db_cancelled_lesson
+
+async def get_cancelled_lessons_service(db: AsyncSession) -> list[CancelledLesson]:
+    query = select(CancelledLesson)
+
+    result = await db.execute(query.order_by(CancelledLesson.lesson_date, CancelledLesson.id))
+    return result.scalars().all()
