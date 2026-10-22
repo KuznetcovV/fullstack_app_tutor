@@ -74,3 +74,22 @@ async def test_get_cancelled_lessons_returns_list(created_lessons_and_cancelled_
     body = response.json()
     assert len(body) == 3
     assert {item["id"] for item in body} == expected_id
+
+async def test_get_cancelled_lessons_returns_empty_list_when_none_exist(teacher_client):
+    response = await teacher_client.get("/cancelled-lessons/")
+    assert response.status_code == 200, response.text
+    assert response.json() == []
+
+async def test_get_cancelled_lessons_filtered_by_lesson_id(created_lessons_and_cancelled_lessons, teacher_client):
+    lesson_id = created_lessons_and_cancelled_lessons[0]["lesson_id"]
+
+    response = await teacher_client.get("/cancelled-lessons/", params={
+        "lesson_id": lesson_id
+    })
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+
+    assert len(body) == 1, response.text
+    assert body[0]["lesson_id"] == lesson_id
+
