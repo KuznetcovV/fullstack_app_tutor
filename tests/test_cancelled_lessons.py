@@ -28,3 +28,19 @@ async def test_create_cancelled_lesson_with_wrong_weekday_returns_422(teacher_cl
     })
 
     assert response.status_code == 422, response.text
+
+async def test_create_duplicate_cancelled_lesson_returns_409(teacher_client, created_solo_student_and_lesson):
+    lesson_id = created_solo_student_and_lesson["id"]
+    first_response = await teacher_client.post("/cancelled-lessons/", json={
+        "lesson_id": lesson_id,
+        "lesson_date": "2026-10-20"
+    })
+
+    assert first_response.status_code == 201, first_response.text
+
+    second_response = await teacher_client.post("/cancelled-lessons/", json={
+        "lesson_id": lesson_id,
+        "lesson_date": "2026-10-20"
+    })
+
+    assert second_response.status_code == 409, second_response.text
