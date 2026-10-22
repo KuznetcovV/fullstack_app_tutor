@@ -99,3 +99,9 @@ async def test_get_cancelled_lesson_by_id_returns_200(created_lessons_and_cancel
 
     assert response.status_code == 200, response.text
     assert response.json() == expected
+
+async def test_get_cancelled_lesson_by_id_not_found_returns_404(teacher_client):
+    response = await teacher_client.get("/cancelled-lessons/999")
+    assert response.status_code == 404, response.text
+
+    
