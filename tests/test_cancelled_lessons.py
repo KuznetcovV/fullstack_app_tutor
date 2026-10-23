@@ -194,3 +194,24 @@ async def test_get_cancelled_lessons_filtered_by_date_range(created_lessons_and_
     assert len(body) == 1
 
     assert body[0]["id"] == second_cancel["id"]
+
+async def test_create_cancelled_lesson_for_logged_date_returns_409(created_solo_student_and_lesson, teacher_client):
+    lesson = created_solo_student_and_lesson
+
+    student_id = lesson["student_id"]
+    lesson_id = lesson["id"]
+
+    first_post_response = await teacher_client.post("/lesson-logs/", json={
+        "student_id": student_id,
+        "lesson_id": lesson_id,
+        "lesson_log_date": "2026-10-20"
+    })
+
+    assert first_post_response.status_code == 201, first_post_response.text
+
+    second_post_response = await teacher_client.post("/cancelled-lessons/", json={
+        "lesson_id": lesson_id,
+        "lesson_date": "2026-10-20"
+    })
+
+    assert second_post_response.status_code == 409, second_post_response.text
