@@ -136,3 +136,17 @@ async def test_delete_cancelled_lesson_allows_cancelling_same_date_again(created
     })
 
     assert post_response.status_code == 201, post_response.text
+
+async def test_delete_lesson_removes_its_cancelled_lessons(created_lessons_and_cancelled_lessons, teacher_client):
+    cancelled_lesson_id = created_lessons_and_cancelled_lessons[0]["id"]
+    first_lesson_id = created_lessons_and_cancelled_lessons[0]["lesson_id"]
+
+    delete_response = await teacher_client.delete(f"/lessons/{first_lesson_id}")
+    assert delete_response.status_code == 204, delete_response.text
+
+    first_get_response = await teacher_client.get("/cancelled-lessons/")
+    assert first_get_response.status_code == 200, first_get_response.text
+    assert len(first_get_response.json()) == 2
+
+    second_get_reponse = await teacher_client.get(f"/cancelled-lessons/{cancelled_lesson_id}")
+    assert second_get_reponse.status_code == 404, second_get_reponse.text
