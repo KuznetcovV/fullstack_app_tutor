@@ -301,3 +301,27 @@ async def test_schedule_cancelled_lesson_does_not_affect_other_lessons_same_day(
     assert get_body[0]["lesson_id"] == lesson_id
     assert get_body[0]["time_start"] == lesson["time_start"]
     assert get_body[0]["time_end"] == lesson["time_end"]
+
+async def test_schedule_cancelled_lesson_outside_range_is_ignored(teacher_client, created_solo_student_and_many_lessons):
+    lessons = created_solo_student_and_many_lessons
+    first_lesson = lessons[0]
+    second_lesson = lessons[1]
+    third_lesson = lessons[2]
+
+    post_response = await teacher_client.post("/cancelled-lessons/", json={
+        "lesson_id": first_lesson["id"],
+        "lesson_date": "2026-10-27"
+    })
+
+    assert post_response.status_code == 201, post_response.text
+
+    get_response = await teacher_client.get("/schedule/", params={
+            "date_from": "2026-10-19", "date_to": "2026-10-25"
+        })
+
+    assert get_response.status_code == 200, get_response.text
+    body = get_response.json()
+    assert len(body) == 3, get_response.text
+    assert body[0]["lesson_id"] == first_lesson["id"]
+    assert body[1]["lesson_id"] == second_lesson["id"]
+    assert body[2]["lesson_id"] == third_lesson["id"]
