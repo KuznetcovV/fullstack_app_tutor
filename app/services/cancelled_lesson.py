@@ -1,3 +1,5 @@
+from datetime import date
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.schemas.cancelled_lesson import CancelledLessonCreate
@@ -31,11 +33,14 @@ async def create_cancelled_lesson_service(db: AsyncSession,
 
     return db_cancelled_lesson
 
-async def get_cancelled_lessons_service(db: AsyncSession, lesson_id: int | None = None) -> list[CancelledLesson]:
+async def get_cancelled_lessons_service(db: AsyncSession, lesson_id: int | None = None, date_from: date | None = None) -> list[CancelledLesson]:
     query = select(CancelledLesson)
 
     if lesson_id is not None:
         query = query.where(CancelledLesson.lesson_id == lesson_id)
+
+    if date_from is not None:
+        query = query.where(CancelledLesson.lesson_date >= date_from)
 
     result = await db.execute(query.order_by(CancelledLesson.lesson_date, CancelledLesson.id))
     return result.scalars().all()

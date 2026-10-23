@@ -1,3 +1,5 @@
+from datetime import date
+
 from fastapi import APIRouter, Depends, status
 from app.dependencies.auth import get_current_teacher_or_admin
 from app.dependencies.database import get_db
@@ -22,11 +24,12 @@ async def create_cancelled_lesson(cancelled_lesson: CancelledLessonCreate,
             status_code=status.HTTP_200_OK,
             summary="Получить все записи об отменах")
 async def get_cancelled_lessons(
+    date_from: date | None = None,
     lesson_id: int | None = None,
     db: AsyncSession = Depends(get_db)
 ) -> list[CancelledLessonResponse]:
 
-    return await get_cancelled_lessons_service(db=db, lesson_id=lesson_id)
+    return await get_cancelled_lessons_service(db=db, lesson_id=lesson_id, date_from=date_from)
 
 @router.get("/{cancelled_lesson_id}",
             response_model=CancelledLessonResponse,
