@@ -30,7 +30,7 @@ async def get_schedule_service(
 
     query_cancelled_lessons = select(CancelledLesson).where(CancelledLesson.lesson_date.between(date_from, date_to))
     result_cancelled_lessons = await db.execute(query_cancelled_lessons)
-    cancelled_pairs = {item.lesson_id for item in result_cancelled_lessons.scalars().all()}
+    cancelled_pairs = {(item.lesson_id, item.lesson_date) for item in result_cancelled_lessons.scalars().all()}
 
     lessons_by_weekday = defaultdict(list)
     for lesson in all_lessons:
@@ -41,7 +41,7 @@ async def get_schedule_service(
     while current_date <= date_to:
 
         for lesson in lessons_by_weekday[current_date.weekday()]:
-            if lesson.id not in cancelled_pairs:
+            if (lesson.id, current_date) not in cancelled_pairs:
                 schedule.append(ScheduleResponse(
                     lesson_id=lesson.id,
                     student_id=lesson.student_id,
