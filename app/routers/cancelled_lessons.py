@@ -25,11 +25,15 @@ async def create_cancelled_lesson(cancelled_lesson: CancelledLessonCreate,
             summary="Получить все записи об отменах")
 async def get_cancelled_lessons(
     date_from: date | None = None,
+    date_to: date | None = None,
     lesson_id: int | None = None,
     db: AsyncSession = Depends(get_db)
 ) -> list[CancelledLessonResponse]:
 
-    return await get_cancelled_lessons_service(db=db, lesson_id=lesson_id, date_from=date_from)
+    return await get_cancelled_lessons_service(db=db, 
+                                               lesson_id=lesson_id, 
+                                               date_from=date_from,
+                                               date_to=date_to)
 
 @router.get("/{cancelled_lesson_id}",
             response_model=CancelledLessonResponse,

@@ -170,7 +170,6 @@ async def test_get_cancelled_lessons_filtered_by_date_to(created_lessons_and_can
     cancelled_lessons = created_lessons_and_cancelled_lessons
     first_cancel = cancelled_lessons[0]
     second_cancel = cancelled_lessons[1]
-    third_cancel = cancelled_lessons[2]
     response = await teacher_client.get("/cancelled-lessons/", params={
         "date_to": "2026-10-22"
     })
