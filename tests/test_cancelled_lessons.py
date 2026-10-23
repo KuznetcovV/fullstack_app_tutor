@@ -165,4 +165,19 @@ async def test_get_cancelled_lessons_filtered_by_date_from(created_lessons_and_c
 
     assert body[0]["id"] == second_cancel["id"]
     assert body[1]["id"] == third_cancel["id"]
-    
+
+async def test_get_cancelled_lessons_filtered_by_date_to(created_lessons_and_cancelled_lessons, teacher_client):
+    cancelled_lessons = created_lessons_and_cancelled_lessons
+    first_cancel = cancelled_lessons[0]
+    second_cancel = cancelled_lessons[1]
+    third_cancel = cancelled_lessons[2]
+    response = await teacher_client.get("/cancelled-lessons/", params={
+        "date_to": "2026-10-22"
+    })
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert len(body) == 2
+
+    assert body[0]["id"] == first_cancel["id"]
+    assert body[1]["id"] == second_cancel["id"]
