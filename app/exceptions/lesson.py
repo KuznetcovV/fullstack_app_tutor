@@ -27,3 +27,7 @@ class LessonAlreadyCancelled(AppException):
 class CancelledLessonNotFound(AppException):
     status_code = 404
     detail = "Запись об отмененном занятии не найдена."
+
+class CancelledLessonHasLessonLog(AppException):
+    status_code = 409 
+    detail = "Нельзя отменить занятие, по которому уже есть запись о проведении."
