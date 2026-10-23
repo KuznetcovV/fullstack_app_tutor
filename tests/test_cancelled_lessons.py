@@ -148,5 +148,21 @@ async def test_delete_lesson_removes_its_cancelled_lessons(created_lessons_and_c
     assert first_get_response.status_code == 200, first_get_response.text
     assert len(first_get_response.json()) == 2
 
-    second_get_reponse = await teacher_client.get(f"/cancelled-lessons/{cancelled_lesson_id}")
-    assert second_get_reponse.status_code == 404, second_get_reponse.text
+    second_get_response = await teacher_client.get(f"/cancelled-lessons/{cancelled_lesson_id}")
+    assert second_get_response.status_code == 404, second_get_response.text
+
+async def test_get_cancelled_lessons_filtered_by_date_from(created_lessons_and_cancelled_lessons, teacher_client):
+    cancelled_lessons = created_lessons_and_cancelled_lessons
+    second_cancel = cancelled_lessons[1]
+    third_cancel = cancelled_lessons[2]
+    response = await teacher_client.get("/cancelled-lessons/", params={
+        "date_from": "2026-10-22"
+    })
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert len(body) == 2
+
+    assert body[0]["id"] == second_cancel["id"]
+    assert body[1]["id"] == third_cancel["id"]
+    
