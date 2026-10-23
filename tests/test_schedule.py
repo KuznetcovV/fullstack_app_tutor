@@ -239,3 +239,24 @@ async def test_schedule_excludes_cancelled_lesson_on_its_date(teacher_client, cr
     assert len(body) == 2, second_get_response.text
     assert body[0]["lesson_id"] == second_lesson_id
     assert body[1]["lesson_id"] == third_lesson_id
+
+async def test_schedule_keeps_cancelled_lesson_on_other_weeks(teacher_client, created_lessons_and_cancelled_lessons):
+    cancelled_lessons = created_lessons_and_cancelled_lessons
+    first_lesson_id = cancelled_lessons[0]["lesson_id"]
+    second_lesson_id = cancelled_lessons[1]["lesson_id"]
+    third_lesson_id = cancelled_lessons[2]["lesson_id"]
+
+    response = await teacher_client.get("/schedule/", params={
+        "date_from": "2026-10-19", "date_to": "2026-11-01"
+    })
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+
+    assert len(body) == 3
+    assert body[0]["lesson_id"] == first_lesson_id, response.text
+    assert body[0]["lesson_date"] == "2026-10-27", response.text
+    assert body[1]["lesson_id"] == second_lesson_id, response.text
+    assert body[1]["lesson_date"] == "2026-10-29", response.text
+    assert body[2]["lesson_id"] == third_lesson_id, response.text
+    assert body[2]["lesson_date"] == "2026-10-31", response.text
