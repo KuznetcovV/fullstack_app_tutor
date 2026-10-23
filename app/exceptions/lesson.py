@@ -15,3 +15,19 @@ class LessonTimeIntersection(AppException):
 class InvalidLessonTimeInterval(AppException):
     status_code = 422
     detail = "Время начала занятия должно быть раньше времени конца занятия."
+
+class LessonDateWeekdayMismatch(AppException):
+    status_code = 422
+    detail = "Дата не совпадает с днем недели занятия."
+
+class LessonAlreadyCancelled(AppException):
+    status_code = 409
+    detail = "На эту дату занятие уже отменено."
+
+class CancelledLessonNotFound(AppException):
+    status_code = 404
+    detail = "Запись об отмененном занятии не найдена."
+
+class CancelledLessonHasLessonLog(AppException):
+    status_code = 409 
+    detail = "Нельзя отменить занятие, по которому уже есть запись о проведении."

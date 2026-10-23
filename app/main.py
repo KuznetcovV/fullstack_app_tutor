@@ -7,6 +7,7 @@ from app.routers.lesson_logs import router as lesson_logs_router
 from app.routers.auth import router as auth_router
 from app.routers.users import router as users_router
 from app.routers.schedule import router as schedule_router
+from app.routers.cancelled_lessons import router as cancelled_lesson_router
 from app.core.config import FRONTEND_URL
 from app.core.handlers import app_exception_handler
 from app.core.exceptions import AppException
@@ -34,6 +35,7 @@ app.add_middleware(
 def home():
     return {"message": "Максим, ты уволен"}
 
+app.include_router(cancelled_lesson_router)
 app.include_router(users_router)
 app.include_router(auth_router)
 app.include_router(students_router)

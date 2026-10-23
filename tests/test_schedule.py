@@ -186,7 +186,7 @@ async def test_schedule_with_max_allowed_range_returns_200(teacher_client):
         "date_from": "2026-10-01", "date_to": "2026-10-31"
     })
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.text
 
 async def test_schedule_with_invalid_date_format_returns_422(teacher_client):
     response = await teacher_client.get("/schedule/", params={
@@ -204,3 +204,124 @@ async def test_schedule_without_auth_returns_401(client):
     response = await client.get("/schedule/")
 
     assert response.status_code == 401
+
+async def test_schedule_excludes_cancelled_lesson_on_its_date(teacher_client, created_solo_student_and_many_lessons):
+
+    first_lesson_id = created_solo_student_and_many_lessons[0]["id"]
+    second_lesson_id = created_solo_student_and_many_lessons[1]["id"]
+    third_lesson_id = created_solo_student_and_many_lessons[2]["id"]
+    
+    first_get_response = await teacher_client.get("/schedule/", params={
+        "date_from": "2026-10-19", "date_to": "2026-10-25"
+    })
+
+    assert first_get_response.status_code == 200, first_get_response.text
+    body = first_get_response.json()
+    assert len(body) == 3, first_get_response.text
+
+    assert body[0]["lesson_id"] == first_lesson_id
+    assert body[1]["lesson_id"] == second_lesson_id
+    assert body[2]["lesson_id"] == third_lesson_id
+
+    post_response = await teacher_client.post("/cancelled-lessons/", json={
+        "lesson_id": first_lesson_id,
+        "lesson_date": body[0]["lesson_date"]
+    })
+
+    assert post_response.status_code == 201, post_response.text
+
+    second_get_response = await teacher_client.get("/schedule/", params={
+        "date_from": "2026-10-19", "date_to": "2026-10-25"
+    })
+
+    assert second_get_response.status_code == 200, second_get_response.text
+    body = second_get_response.json()
+    assert len(body) == 2, second_get_response.text
+    assert body[0]["lesson_id"] == second_lesson_id
+    assert body[1]["lesson_id"] == third_lesson_id
+
+async def test_schedule_keeps_cancelled_lesson_on_other_weeks(teacher_client, created_lessons_and_cancelled_lessons):
+    cancelled_lessons = created_lessons_and_cancelled_lessons
+    first_lesson_id = cancelled_lessons[0]["lesson_id"]
+    second_lesson_id = cancelled_lessons[1]["lesson_id"]
+    third_lesson_id = cancelled_lessons[2]["lesson_id"]
+
+    response = await teacher_client.get("/schedule/", params={
+        "date_from": "2026-10-19", "date_to": "2026-11-01"
+    })
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+
+    assert len(body) == 3
+    assert body[0]["lesson_id"] == first_lesson_id, response.text
+    assert body[0]["lesson_date"] == "2026-10-27", response.text
+    assert body[1]["lesson_id"] == second_lesson_id, response.text
+    assert body[1]["lesson_date"] == "2026-10-29", response.text
+    assert body[2]["lesson_id"] == third_lesson_id, response.text
+    assert body[2]["lesson_date"] == "2026-10-31", response.text
+
+async def test_schedule_cancelled_lesson_does_not_affect_other_lessons_same_day(teacher_client, created_solo_student_and_lesson):    
+    lesson = created_solo_student_and_lesson
+    student_id = lesson["student_id"]
+    lesson_id = lesson["id"]
+
+    first_post_response = await teacher_client.post("/lessons/", json={
+        "student_id": student_id,
+        "day": 1,
+        "time_start": "13:00:00",
+        "time_end": "14:00:00"
+    })
+
+    assert first_post_response.status_code == 201, first_post_response.text
+    post_body = first_post_response.json()
+
+    first_get_response = await teacher_client.get("/schedule/", params={
+            "date_from": "2026-10-19", "date_to": "2026-10-21"
+        })
+
+    assert first_get_response.status_code == 200, first_get_response.text
+    assert len(first_get_response.json()) == 2
+
+    second_post_response = await teacher_client.post("/cancelled-lessons/", json={
+        "lesson_id": post_body["id"],
+        "lesson_date": "2026-10-20"
+    })
+
+    assert second_post_response.status_code == 201, second_post_response.text
+
+    second_get_response = await teacher_client.get("/schedule/", params={
+            "date_from": "2026-10-19", "date_to": "2026-10-21"
+        })
+
+    assert second_get_response.status_code == 200, second_get_response.text
+    assert len(second_get_response.json()) == 1
+
+    get_body = second_get_response.json()
+    assert get_body[0]["lesson_id"] == lesson_id
+    assert get_body[0]["time_start"] == lesson["time_start"]
+    assert get_body[0]["time_end"] == lesson["time_end"]
+
+async def test_schedule_cancelled_lesson_outside_range_is_ignored(teacher_client, created_solo_student_and_many_lessons):
+    lessons = created_solo_student_and_many_lessons
+    first_lesson = lessons[0]
+    second_lesson = lessons[1]
+    third_lesson = lessons[2]
+
+    post_response = await teacher_client.post("/cancelled-lessons/", json={
+        "lesson_id": first_lesson["id"],
+        "lesson_date": "2026-10-27"
+    })
+
+    assert post_response.status_code == 201, post_response.text
+
+    get_response = await teacher_client.get("/schedule/", params={
+            "date_from": "2026-10-19", "date_to": "2026-10-25"
+        })
+
+    assert get_response.status_code == 200, get_response.text
+    body = get_response.json()
+    assert len(body) == 3, get_response.text
+    assert body[0]["lesson_id"] == first_lesson["id"]
+    assert body[1]["lesson_id"] == second_lesson["id"]
+    assert body[2]["lesson_id"] == third_lesson["id"]
